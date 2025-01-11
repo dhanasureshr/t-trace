@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./t_trace/schema",
+        "./tests/test_"
+    ]
+}
