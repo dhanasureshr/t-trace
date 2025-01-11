@@ -1,0 +1,41 @@
+# Logging Configuration
+logging:
+  log_level: "detailed"  # Options: "minimal", "detailed", "debug"
+  log_type: "attention"  # Options: "attention", "embedding", "prediction"
+
+# Sparse Logging Configuration
+sparse_logging:
+  enabled: true          # Enable or disable sparse logging
+  top_k: 5               # Number of top-k attention scores to log
+
+# Compression Configuration
+compression:
+  enabled: true          # Enable or disable compression
+  algorithm: "snappy"    # Compression algorithm (e.g., "snappy", "gzip")
+  quantization:
+    precision: "8-bit"   # Quantization precision (e.g., "8-bit", "16-bit")
+    scale: 0.1           # Quantization scale factor
+
+# Feedback Loop Configuration
+feedback_loop:
+  enabled: true          # Enable or disable the feedback loop
+  error_analysis:
+    loss_threshold: 0.1  # Threshold for identifying high-loss layers
+    gradient_norm_threshold: 0.01  # Threshold for identifying high-gradient layers
+
+# Multimodal Configuration
+multimodal:
+  enabled: true          # Enable or disable multimodal logging
+  modalities:            # List of supported modalities
+    - "text"
+    - "image"
+    - "audio"
+  cross_modal_interactions:
+    enabled: true        # Enable or disable cross-modal interactions logging
+    fusion_method: "attention"  # Fusion method (e.g., "attention", "concatenation")
+
+# Storage Configuration
+storage:
+  format: "parquet"      # Storage format (e.g., "parquet", "csv")
+  compression: "snappy"  # Compression for storage (e.g., "snappy", "gzip")
+  directory: "logs"      # Directory to save logs
