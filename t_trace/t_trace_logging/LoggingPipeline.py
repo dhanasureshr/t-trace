@@ -12,7 +12,7 @@ import pyarrow as pa
 from typing import Dict, List, Union
 from schema.log_schema import LOG_SCHEMA,save_logs_to_parquet
 import torch.nn.functional as F
-
+from functools import partial
 class LoggingPipeline:
     """This is a docstring for LoggingPipeline."""
     def __init__(self, model, config: Union[str, Dict] = "t_trace/config/default_config.yaml"):
@@ -196,8 +196,8 @@ class LoggingPipeline:
         """
         Enable logging by adding hooks to the model's layers.
         """
-        for layer_id, layer in enumerate(self.model.encoder.layer):  # Assuming you are using BERT
-            def hook(module, input, output, layer_id=layer_id):
+        for layer_id, layer in enumerate(self.model.bert.encoder.layer):  # Assuming you are using BERT
+            def hook(module, input, output, layer_id):
                 # Log the real-time layer data (e.g., attention weights, hidden states)
                 # outputs.attentions will contain the attention weights for each layer
                 # Get model outputs
@@ -217,12 +217,8 @@ class LoggingPipeline:
                 else:
                     print("Attention weights not found in the output.")
 
-
-
-                
-
-        # Register the hook for each layer
-        layer.register_forward_hook(hook)
+            #Register the hook for each layer
+            layer.register_forward_hook(partial(hook, layer_id=layer_id))
 
         #for layer_id, layer in enumerate(self.model.encoder.layer):  # Example for BERT
         #    layer.register_forward_hook(lambda module, input, output: self.log_layer_data(layer_id, output))
