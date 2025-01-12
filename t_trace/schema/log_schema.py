@@ -83,7 +83,7 @@ def save_logs_to_parquet(logs: List[Dict], filepath: str):
     """
     try:
       
-        print(logs)  # Check the structure before saving
+        #print(logs)  # Check the structure before saving
 
         
          # Create a PyArrow table
