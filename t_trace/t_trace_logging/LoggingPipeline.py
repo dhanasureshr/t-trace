@@ -162,6 +162,10 @@ class LoggingPipeline:
         except Exception as e:
             print(f"Error logging cross-modal interactions: {e}")
     
+    def get_logs(self):
+        return self.logs  # Return the current logs
+
+
     def save_logs(self, filepath: str):
         """
         Save logs to a file in Parquet format using the T-TRACE schema.

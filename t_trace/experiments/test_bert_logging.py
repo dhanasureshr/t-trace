@@ -5,9 +5,16 @@ import torch.nn as nn
 # Adding project root directory to path for module imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output,State
+import plotly.express as px
+
 from transformers import BertTokenizer, BertModel
 import torch
 from t_trace_logging.LoggingPipeline import LoggingPipeline
+from analysis.seperate_process_server import start_dash_server
 
 
 
@@ -63,7 +70,10 @@ logging_pipeline = LoggingPipeline(model)
 # Enable logging hooks for all layers
 logging_pipeline.enable_logging()
 
-text = "I hate my job; it's stressful, unfulfilling, and draining."
+#text = "Ravan's disdain for Rama exceeds that of every other individual on the planet."
+text = "Setha loves Rama more than any one on this planet."
+#text = "Setha loves Rama more than any one on this planet."
+
 # Tokenize the input text
 inputs = tokenizer(text, return_tensors='pt')
 
@@ -86,8 +96,9 @@ predicted_class = torch.argmax(logits, dim=1).item()
 # Map the predicted class to its label
 predicted_label = label_mapping.get(predicted_class, "Unknown")
 
-print(f"Predicted sentiment: {predicted_label}")
+print(f"\n Predicted sentiment: {predicted_label}")
 
 
 # Save the logged data to a Parquet file
 logging_pipeline.save_logs("logs/bert_layer_logs.parquet")
+
