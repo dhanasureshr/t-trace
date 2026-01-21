@@ -8,4 +8,3 @@ T-TRACE is a Python package for enhancing the transparency and interpretability 
 ## Installation
 
 ```bash
-pip install t-trace
