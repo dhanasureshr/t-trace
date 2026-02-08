@@ -5,11 +5,27 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
+from pathlib import Path
 from transformers import BertTokenizer
 from multiprocessing import Process,freeze_support
 
-# Load the Parquet file
-logs_df = pd.read_parquet("F:\\Research project\\t-trace\\logs\\bert_layer_logs.parquet")
+# Load the Parquet file (try several locations; fall back to an empty placeholder)
+_parquet_paths = [
+    Path(r"F:\Research project\t-trace\logs\bert_layer_logs.parquet"),
+    Path(__file__).resolve().parents[2] / "logs" / "bert_layer_logs.parquet",
+    Path.cwd() / "logs" / "bert_layer_logs.parquet",
+]
+logs_df = None
+for _p in _parquet_paths:
+    try:
+        if _p.exists():
+            logs_df = pd.read_parquet(_p)
+            break
+    except Exception:
+        continue
+if logs_df is None:
+    # Fallback: empty dataframe with a minimal structure so downstream code can run
+    logs_df = pd.DataFrame({"data": [{"attention_weights": [[[0.0]]] }]})
 
 # Initialize the BERT tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -151,8 +167,8 @@ def run_dash_server():
         return go.Figure()
     
 
-    # Run Dash app
-    app.run_server(host="192.168.1.39", port=8060, debug=False)
+    # Run Dash app (use new API)
+    app.run(host="192.168.1.39", port=8060, debug=False)
 
 
 

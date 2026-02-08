@@ -8,7 +8,7 @@ import numpy as np
 from transformers import BertTokenizer
 
 # Load the Parquet file
-logs_df = pd.read_parquet("F:\\Research project\\t-trace\\logs\\bert_layer_logs.parquet")
+logs_df = pd.read_parquet("/home/dhana/Documents/Ai/mtrace/t-trace/logs/bert_layer_logs.parquet")
 
 # Initialize the BERT tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -138,4 +138,4 @@ def update_heatmap(tab):
 
 # Run app
 if __name__ == "__main__":
-    app.run_server(host="192.168.1.39",port=8060, debug=True)
+    app.run(host="192.168.1.35",port=8060, debug=True)

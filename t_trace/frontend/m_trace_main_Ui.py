@@ -53,4 +53,4 @@ def render_tab(tab):
 
 # Run app
 if __name__ == "__main__":
-    app.run_server(port=8060,debug=True)
+    app.run(port=8060, debug=True)
