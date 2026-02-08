@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 from spacy.lang.en import English
 from transformers import BertTokenizer
 # Load the Parquet file
-logs_df = pd.read_parquet("F:\\Research project\\t-trace\\logs\\bert_layer_logs.parquet")
+logs_df = pd.read_parquet("/home/dhana/Documents/Ai/mtrace/t-trace/logs/bert_layer_logs.parquet")
 
 # Display the DataFrame
 #print(logs_df)
@@ -95,7 +96,14 @@ def plot_highlighted_tokens(tokens, attention_weights):
     ax.set_xlim(-1, len(filtered_tokens))
     ax.set_ylim(-1, 1)
     ax.axis("off")
-    plt.show()
+
+    # Save figure to repo logs directory (create if necessary)
+    out_dir = Path(__file__).resolve().parents[2] / "logs"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / "attention_heatmap.png"
+    fig.savefig(out_path, bbox_inches="tight")
+    print(f"Saved attention heatmap to: {out_path}")
+    plt.close(fig)
 
 
 plot_highlighted_tokens(tokens, attention_weights)
