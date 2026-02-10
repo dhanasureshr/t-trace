@@ -70,8 +70,8 @@ logging_pipeline = LoggingPipeline(model)
 # Enable logging hooks for all layers
 logging_pipeline.enable_logging()
 
-#text = "Ravan's disdain for Rama exceeds that of every other individual on the planet."
-text = "Setha loves Rama more than any one on this planet."
+text = "Ravan's disdain for Rama exceeds that of every other individual on the planet."
+#text = "Setha loves Rama more than any one on this planet."
 #text = "Setha loves Rama more than any one on this planet."
 
 # Tokenize the input text

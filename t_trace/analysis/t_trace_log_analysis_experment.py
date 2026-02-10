@@ -15,9 +15,9 @@ logs_df = pd.read_parquet("/home/dhana/Documents/Ai/mtrace/t-trace/logs/bert_lay
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 # Sample input text to pass through BERT
 
-#text = "Ravan's animosity toward Rama is greater than anyone else's on this planet."
+text = "Ravan's animosity toward Rama is greater than anyone else's on this planet."
 
-text = "I hate my job; it's stressful, unfulfilling, and draining."
+#text = "I hate my job; it's stressful, unfulfilling, and draining."
 # Tokenize the input text
 tokens = tokenizer.tokenize(text)  # Get token strings
 
