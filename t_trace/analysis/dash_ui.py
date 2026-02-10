@@ -14,7 +14,7 @@ logs_df = pd.read_parquet("/home/dhana/Documents/Ai/mtrace/t-trace/logs/bert_lay
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 # Sample input text
-text = "I hate my job; it's stressful, unfulfilling, and draining."
+text = "Ravan's animosity toward Rama is greater than anyone else's on this planet."
 
 # Tokenize the input text
 tokens = tokenizer.tokenize(text)  # Get token strings
@@ -138,4 +138,4 @@ def update_heatmap(tab):
 
 # Run app
 if __name__ == "__main__":
-    app.run(host="192.168.1.35",port=8060, debug=True)
+    app.run(host="192.168.1.35",port=8064, debug=True)
