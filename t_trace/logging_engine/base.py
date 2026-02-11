@@ -372,6 +372,9 @@ class LoggingEngine:
         # Detect framework
         framework = self._detect_framework(model)
         logger.info(f"Detected framework: {framework}")
+
+        # CRITICAL: Inject run_id into config BEFORE creating framework engine
+        config_with_run_id = {**self.config, "run_id": self.run_id, "mode": mode}
         
         # Create framework-specific engine
         self._framework_engine = self._create_framework_engine(model, framework, mode)
@@ -389,6 +392,17 @@ class LoggingEngine:
             f"M-TRACE logging enabled in {mode} mode for {framework} model "
             f"(run_id: {self.run_id})"
         )
+        """elif framework == "sklearn":
+            return self._framework_engine.get_wrapped_model()  # Returns wrapped estimator"""
+        
+            # SPECIAL CASE: TensorFlow requires callback integration by user
+        if framework == "tensorflow":
+            return self._framework_engine.get_callback()  # ← CRITICAL: Return callback to user
+        elif framework == "sklearn":
+            return self._framework_engine.get_wrapped_model()  # Returns wrapped estimator
+        else:
+            return None  # PyTorch/scikit-learn hooks attached directly
+        
     
     def disable_logging(self) -> None:
         """Disable logging and cleanup resources."""
