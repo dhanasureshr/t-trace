@@ -117,6 +117,36 @@ class PyTorchHook:
                         "sparse_type": sparse_result.get("sparse_type", "threshold"),
                         "sparse_indices": sparse_result.get("sparse_indices", [])
                     }
+
+            # AFTER existing output capture logic in _forward_hook():
+
+            # Special handling for transformer attention weights (Hugging Face)
+            if "attention_weights" in self.config.get("custom_fields", []):
+                # Case 1: Hugging Face output tuple (hidden_states, attentions)
+                if isinstance(output, tuple) and len(output) > 1:
+                    attentions = output[1]  # Second element is attention weights
+                    
+                    # Handle nested attention structures
+                    if isinstance(attentions, (list, tuple)) and len(attentions) > 0:
+                        # Take first layer's attention for logging (to avoid excessive data)
+                        attentions = attentions[0]
+                    
+                    if isinstance(attentions, torch.Tensor):
+                        # Extract attention for first batch item and first head
+                        if attentions.ndim == 4:  # (batch, heads, seq_len, seq_len)
+                            attn_weights = attentions[0, 0]  # First batch, first head
+                        elif attentions.ndim == 3:  # (batch, seq_len, seq_len)
+                            attn_weights = attentions[0]
+                        else:
+                            attn_weights = attentions
+                        
+                        log_entry["internal_states"]["attention_weights"] = self._sparse_filter(attn_weights)
+                
+                # Case 2: Direct attention weights in output dict (some custom models)
+                elif isinstance(output, dict) and "attentions" in output:
+                    attentions = output["attentions"]
+                    if isinstance(attentions, torch.Tensor) and attentions.ndim == 4:
+                        log_entry["internal_states"]["attention_weights"] = self._sparse_filter(attentions[0, 0])
             
             self._logs.append(log_entry)
             
@@ -278,11 +308,49 @@ class PyTorchHook:
 
 class PyTorchLoggingEngine:
     """Framework-specific engine for PyTorch models."""
+
     
     SUPPORTED_LAYERS = (
         nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d, nn.LSTM, nn.GRU,
         nn.MultiheadAttention, nn.TransformerEncoderLayer
     )
+
+    def _capture_model_attention(self, model_output: Any) -> Optional[Dict]:
+        """
+        Capture attention weights from transformer model outputs.
+        
+        Handles Hugging Face output formats:
+        - BaseModelOutputWithAttentions (attentions attribute)
+        - Tuple outputs (hidden_states, attentions)
+        """
+        try:
+            # Case 1: Hugging Face output object with attentions attribute
+            if hasattr(model_output, 'attentions') and model_output.attentions:
+                # Extract first layer, first head, first batch item for visualization
+                if isinstance(model_output.attentions[0], torch.Tensor):
+                    attn = model_output.attentions[0][0, 0]  # [batch, head, seq, seq] → first head
+                    return {
+                        "attention_weights": attn.detach().cpu().numpy().flatten().tolist(),
+                        "layer_name": "transformer_layer_0",
+                        "layer_index": 0
+                    }
+            
+            # Case 2: Tuple output (hidden_states, attentions)
+            elif isinstance(model_output, tuple) and len(model_output) > 1:
+                attentions = model_output[1]
+                if isinstance(attentions, (list, tuple)) and attentions and isinstance(attentions[0], torch.Tensor):
+                    attn = attentions[0][0, 0]
+                    return {
+                        "attention_weights": attn.detach().cpu().numpy().flatten().tolist(),
+                        "layer_name": "transformer_layer_0",
+                        "layer_index": 0
+                    }
+            
+            return None
+            
+        except Exception as e:
+            logger.debug(f"Attention capture failed: {e}")
+            return None
     
     def __init__(self, model: nn.Module, config: Any):
         if not isinstance(model, nn.Module):
@@ -345,3 +413,66 @@ class PyTorchLoggingEngine:
     def is_enabled(self) -> bool:
         """Check if logging is currently enabled."""
         return self._enabled
+    
+
+class AttentionCaptureWrapper(torch.nn.Module):
+    """
+    Minimal wrapper that captures attention weights from transformer model outputs.
+    Avoids complex layer introspection - works at model output level.
+    """
+    def __init__(self, model, engine):
+        super().__init__()
+        self.model = model
+        self.engine = engine
+        self._mode = engine._mode
+    
+    def forward(self, *args, **kwargs):
+        # Execute model
+        output = self.model(*args, **kwargs)
+        
+        # Capture attention weights in development mode
+        if self._mode == "development":
+            attn_data = self.engine._capture_model_attention(output)
+            if attn_data:
+                # Create schema-compliant log entry
+                log_entry = {
+                    "model_metadata": {
+                        "model_type": self.model.__class__.__name__.lower(),
+                        "framework": "pytorch",
+                        "timestamp": int(time.time() * 1000),
+                        "run_id": self.engine.run_id,
+                        "mode": self._mode,
+                        "model_architecture": {
+                            "num_layers": getattr(self.model, 'config', {}).get('num_hidden_layers', 12) 
+                                          if hasattr(self.model, 'config') else 12,
+                            "layer_types": ["transformer"],
+                            "connections": ["sequential"]
+                        },
+                        "hyperparameters": {
+                            "learning_rate": 0.0,
+                            "batch_size": 1,
+                            "optimizer": "n/a",
+                            "other_params": {}
+                        },
+                        "layer_metadata": {
+                            "layer_type": "transformer",
+                            "activation_function": "gelu",
+                            "num_parameters": sum(p.numel() for p in self.model.parameters())
+                        }
+                    },
+                    "internal_states": {
+                        "layer_name": attn_data["layer_name"],
+                        "layer_index": attn_data["layer_index"],
+                        "attention_weights": attn_data["attention_weights"],
+                        "feature_maps": [],
+                        "node_splits": [],
+                        "gradients": [],
+                        "losses": 0.0,
+                        "feature_importance": [],
+                        "decision_paths": []
+                    },
+                    "event_type": "forward"
+                }
+                self.engine._add_log(log_entry)
+        
+        return output
