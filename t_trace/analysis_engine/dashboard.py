@@ -59,7 +59,7 @@ class AnalysisDashboard:
         self.app.layout = html.Div([
             # Header
             html.Div([
-                html.H1("M-TRACE: Model Transparency through Recursive Analysis of Contextual Encapsulation",
+                html.H1("M-TRACE",
                        style={"textAlign": "center", "marginBottom": "5px"}),
                 html.P("Interactive Dashboard for Model Interpretability and Analysis",
                        style={"textAlign": "center", "color": "#666", "marginBottom": "20px"})
