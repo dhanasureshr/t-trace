@@ -25,7 +25,7 @@ compression:
 
 # ===== LOGGING FREQUENCY (Section 3.1.5) =====
 logging_frequency:
-  batch_size: 30             # Write to storage after N logs collected
+  batch_size: 10             # Write to storage after N logs collected
   time_interval: 10            # Max seconds between writes (even if batch not full)
 
 # ===== MODULAR FIELD SELECTION (Section 3.1.7) =====

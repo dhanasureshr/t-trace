@@ -1,0 +1,58 @@
+mode: development
+logging:
+  log_level: detailed
+  log_type: attention
+sparse_logging:
+  enabled: true
+  sparse_threshold: 0.1
+  top_k_values: 5
+  quantization:
+    enabled: false
+    precision: 8-bit
+    scale: 0.1
+compression:
+  enabled: true
+  compression_type: snappy
+  compression_level: 1
+logging_frequency:
+  batch_size: 1000
+  time_interval: 60
+default_fields:
+- model_type
+- framework
+- timestamp
+- run_id
+- mode
+- layer_name
+- losses
+custom_fields:
+- attention_weights
+- feature_maps
+- gradients
+- feature_importance
+- decision_paths
+- layer_activations
+- attention_distributions
+error_handling:
+  max_storage_retries: 3
+  emergency_recovery: true
+  fallback_to_minimal: true
+storage:
+  backend: local
+  directory: mtrace_logs
+  format: parquet
+  compression: snappy
+feedback_loop:
+  enabled: true
+  error_analysis:
+    loss_threshold: 0.1
+    gradient_norm_threshold: 0.01
+multimodal:
+  enabled: true
+  modalities:
+  - text
+  - image
+  - audio
+  cross_modal_interactions:
+    enabled: true
+    fusion_method: attention
