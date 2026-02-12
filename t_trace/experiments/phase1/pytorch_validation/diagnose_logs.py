@@ -1,34 +1,20 @@
 #!/usr/bin/env python3
-"""Diagnose Parquet schema and overhead root cause"""
+"""Verify saved Parquet file contains layer_name and valid schema"""
 import pyarrow.parquet as pq
 from pathlib import Path
 
+# Find latest Parquet file
 log_dir = Path("mtrace_logs/development")
-latest_parquet = sorted(log_dir.glob("*.parquet"))[-1] if log_dir.exists() else None
+latest = sorted(log_dir.glob("*.parquet"), key=lambda f: f.stat().st_mtime)[-1]
+print(f"Analyzing: {latest.name}")
 
-if not latest_parquet:
-    print("❌ No Parquet files found in mtrace_logs/development/")
-    exit(1)
+# Read table
+table = pq.read_table(latest)
+print(f"✓ Rows: {table.num_rows}")
+print(f"✓ Columns: {table.column_names[:5]}...")
 
-print(f"🔍 Inspecting: {latest_parquet.name}\n")
-table = pq.read_table(latest_parquet)
-
-print(f"Rows: {table.num_rows}")
-print(f"Columns: {table.column_names}\n")
-
-# Sample first row
-print("First log entry (truncated):")
-for col in table.column_names[:5]:
-    val = table[col][0].as_py() if hasattr(table[col][0], 'as_py') else table[col][0]
-    print(f"  {col}: {str(val)[:80]}...")
-
-# Check for layer granularity
-if 'internal_states' in table.column_names:
-    sample = table['internal_states'][0].as_py()
-    print(f"\n⚠️  internal_states structure: {type(sample)}")
-    if isinstance(sample, dict):
-        print(f"   Keys: {list(sample.keys())[:10]}")
-    elif isinstance(sample, list):
-        print(f"   List length: {len(sample)}")
-        if sample and isinstance(sample[0], dict):
-            print(f"   First item keys: {list(sample[0].keys())[:5]}")
+# Sample first log
+first_row = table.slice(0, 1).to_pydict()
+layer_name = first_row["internal_states"][0].get("layer_name", "MISSING")
+print(f"✓ First layer name: {layer_name}")
+print(f"✓ Schema validation: {'layer_name' in first_row['internal_states'][0]}")
