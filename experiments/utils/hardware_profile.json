@@ -1,0 +1,37 @@
+{
+  "system": {
+    "hostname": "AdariWorkstation",
+    "os": "Linux 6.17.0-14-generic",
+    "kernel": "#14~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Jan 15 15:52:10 UTC 2",
+    "python_version": "3.12.3"
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 4080 SUPER",
+    "vram_total_gb": 16.0,
+    "compute_capability": "8.9"
+  },
+  "cpu": {
+    "model": "x86_64",
+    "cores": 12,
+    "threads": 24,
+    "base_clock_ghz": 4.7,
+    "boost_clock_ghz": 5.6
+  },
+  "ram": {
+    "total_gb": 62.0,
+    "type": "DDR5",
+    "speed_mts": 5600
+  },
+  "storage": {
+    "type": "NVMe PCIe 4.0",
+    "devices_detected": 1,
+    "total_capacity_tb": 0.45,
+    "expected_model": "Samsung 990 Pro (or equivalent)"
+  },
+  "mtrace_readiness": {
+    "cuda_available": true,
+    "psutil_available": true,
+    "recommended_batch_size_pytorch": 64,
+    "max_concurrent_experiments": 2
+  }
+}
