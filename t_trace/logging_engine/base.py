@@ -455,6 +455,35 @@ class LoggingEngine:
         with self._buffer_lock:
             return self._log_buffer.copy() + framework_logs
     
+    # ADD THIS METHOD TO LoggingEngine CLASS (after collect_logs())
+    def get_wrapped_model(self) -> Any:
+        """
+        Convenience method to get wrapped estimator for scikit-learn models.
+        
+        Returns:
+            Wrapped estimator with logging instrumentation
+            
+        Raises:
+            RuntimeError: If logging is not enabled or model is not scikit-learn
+            AttributeError: If underlying framework engine doesn't support wrapped models
+        """
+        if not self._enabled:
+            raise RuntimeError("Logging not enabled. Call enable_logging() first.")
+        
+        if not self._framework_engine:
+            raise RuntimeError("Framework engine not initialized")
+        
+        # Delegate to sklearn-specific engine
+        if hasattr(self._framework_engine, 'get_wrapped_model'):
+            return self._framework_engine.get_wrapped_model()
+        
+        # For non-sklearn frameworks, wrapped model doesn't apply
+        framework = self._detect_framework(self._model_ref) if self._model_ref else "unknown"
+        raise AttributeError(
+            f"get_wrapped_model() only available for scikit-learn models. "
+            f"Current framework: {framework}"
+        )
+
     def is_logging_enabled(self) -> bool:
         """Check if logging is currently enabled."""
         return self._enabled
