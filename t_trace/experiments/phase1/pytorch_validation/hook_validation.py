@@ -80,10 +80,10 @@ def profile_minimal():
     
     if logs:
         print(f"   Sample log keys: {list(logs[0].keys())[:4]}")
-        print(f"   First log layer: {logs[0].get('layer_name', 'N/A')}")
+        print(f"   First log layer: {logs[0]["internal_states"].get('layer_name', 'N/A')}")
     
     # Check log files on disk
-    log_dir = Path("ttrace_logs/development")
+    log_dir = Path("mtrace_logs/development")
     if log_dir.exists():
         parquet_files = list(log_dir.glob("*.parquet"))
         print(f"✅ Parquet files on disk: {len(parquet_files)}")
@@ -96,11 +96,16 @@ def profile_minimal():
     if hasattr(engine, "disable_logging"):
         engine.disable_logging()
     
+    # Force immediate flush before disabling logging
+    print("\n▶ Forcing log flush to disk...")
+    engine._flush_buffer()  # Direct flush call
+    time.sleep(0.5)  # Allow async writer to complete
+
     pynvml.nvmlShutdown()
     print("\n" + "="*70)
     print("✅ MINIMAL VALIDATION COMPLETE")
     print("   → If no crash occurred, hooks are attaching successfully")
-    print("   → Next: Check ttrace_logs/development/ for Parquet files")
+    print("   → Next: Check mtrace_logs/development/ for Parquet files")
     print("="*70)
 
 if __name__ == "__main__":
@@ -112,6 +117,6 @@ if __name__ == "__main__":
         traceback.print_exc()
         print("\n💡 TROUBLESHOOTING:")
         print("   1. Run from TERMINAL (not VS Code debugger)")
-        print("   2. Check ttrace_logs/development/ exists")
+        print("   2. Check mtrace_logs/development/ exists")
         print("   3. Verify config.yml has sparse_logging.enabled: true")
         pynvml.nvmlShutdown()
