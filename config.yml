@@ -1,25 +1,19 @@
 mode: development
 sparse_logging:
-  enabled: false
+  enabled: true
   sparse_threshold: 0.1
   top_k_values: 5
 compression:
-  enabled: false
-  compression_type: none
+  enabled: true
+  compression_type: snappy
   compression_level: 1
 logging_frequency:
-  batch_size: 1000
+  batch_size: 50
   time_interval: 60
 custom_fields:
 - attention_weights
 - feature_maps
 - losses
-- layer_activations
-- training_dynamics
-- feature_importance
-- gradients
-- uncertainty_estimates
-- contextual_info
 default_fields:
 - model_type
 - framework
