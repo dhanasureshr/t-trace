@@ -354,12 +354,12 @@ class MTraceCallback(tf.keras.callbacks.Callback):
             },
             "internal_states": {
                 "layer_name": "model_output",
-                "layer_index": -1,
+                "layer_index": 0,
                 "attention_weights": [],
                 "feature_maps": [],
                 "node_splits": [],
                 "gradients": [],
-                "losses": logs.get("loss", 0.0),
+                "losses": float(logs.get("loss", 0.0)),
                 "feature_importance": [],
                 "decision_paths": [],
                 "output_activations": []  # Not captured in callbacks - documented limitation
