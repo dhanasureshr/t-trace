@@ -5,13 +5,14 @@
 mode: "development"  # Options: "development" (detailed) or "production" (lightweight)
 logging:
   log_level: "detailed"  # Options: "minimal", "detailed", "debug"
-  log_type: "attention"  # Options: "attention", "embedding", "prediction", "all"
+  log_type: "prediction"  # Options: "attention", "embedding", "prediction", "all"
 
 # ===== SPARSE LOGGING (Section 3.1.4) =====
 sparse_logging:
   enabled: true
   sparse_threshold: 0.1        # Log only values with abs(value) > threshold
   top_k_values: 5              # Always log top-k values even if below threshold
+  top_K_per_head: 3         # For multi-head attention, log top-K per head
   quantization:
     enabled: false             # Optional lossy quantization (separate from compression)
     precision: "8-bit"         # Options: "8-bit", "16-bit"
@@ -21,12 +22,12 @@ sparse_logging:
 compression:
   enabled: true
   compression_type: "snappy"   # Options: "snappy", "zstd", "gzip", "none"
-  compression_level: 1         # 1=fastest, 9=max compression (ignored for snappy)
+  compression_level: 8         # 1=fastest, 9=max compression (ignored for snappy)
 
 # ===== LOGGING FREQUENCY (Section 3.1.5) =====
 logging_frequency:
-  batch_size: 1000             # Write to storage after N logs collected
-  time_interval: 60            # Max seconds between writes (even if batch not full)
+  batch_size: 10             # Write to storage after N logs collected
+  time_interval: 10            # Max seconds between writes (even if batch not full)
 
 # ===== MODULAR FIELD SELECTION (Section 3.1.7) =====
 # Default fields (always logged for basic transparency):
@@ -47,6 +48,9 @@ custom_fields:
   - gradients
   - feature_importance
   - decision_paths
+  - node_split_conditions
+  - tree_votes  
+  - local_feature_contributions
   
   # Contextual Information (debugging only - disable in production)
   #- input_data
@@ -89,6 +93,33 @@ custom_fields:
   - node_embeddings
   - graph_predictions
 
+# Line ~60: Insert AFTER default_fields section
+tree_models:
+  enabled: true
+  required_fields:
+    - decision_paths
+    - node_split_conditions    # NEW: Feature/threshold at each split
+    - tree_votes               # NEW: Per-tree predictions
+    - local_feature_contributions  # NEW: SHAP values per sample
+  sparse_logging_override:
+    decision_paths: false      # Protect binary path data
+    node_split_conditions: false
+    tree_votes: false
+
+
+field_filtering:
+  exclude_if_model_type:
+    tree:
+      - attention_weights
+      - attention_distributions
+      - embeddings
+      - layer_activations
+      - text_attention_weights
+      - text_embeddings
+      - image_feature_maps
+      - image_spatial_attention
+      - audio_spectrogram_features
+      - audio_temporal_attention
 # ===== STORAGE ENGINE (Section 3.2) =====
 storage:
   backend: "local"             # Options: "local", "s3", "hdfs"

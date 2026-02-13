@@ -1,0 +1,669 @@
+"""Configuration panel UI components for M-TRACE AnalysisEngine - FULLY MODULAR ADVANCED VERSION"""
+from dash import html, dcc
+import dash_bootstrap_components as dbc
+import yaml
+from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Helper: Info icon with tooltip (non-breaking enhancement)
+def _info_with_tooltip(index: str, tooltip_text: str):
+    icon_id = f"info-{index}"
+    icon = html.Span("\u24D8", id=icon_id, style={
+        "marginLeft": "8px", "cursor": "pointer", "fontWeight": "bold",
+        "border": "1px solid #ccc", "borderRadius": "50%", "padding": "2px 6px",
+        "fontSize": "12px", "lineHeight": "12px", "backgroundColor": "#f8f9fa"
+    })
+    tooltip = dbc.Tooltip(tooltip_text, target=icon_id, placement="right")
+    return html.Span([icon, tooltip], style={"display": "inline-block"})
+
+
+class ConfigUI:
+    """Configuration panel UI components with FULL feature set and backward-compatible interface."""
+    
+    @staticmethod
+    def create_config_layout(config_path: Path = None) -> html.Div:
+        """
+        Create configuration panel layout with ALL advanced controls while preserving
+        EXACT component IDs required by existing dashboard callbacks.
+        
+        Args:
+            config_path: Path to config.yml file (optional)
+        
+        Returns:
+            Dash HTML layout for configuration panel (enhanced UI, original IDs preserved)
+        """
+        # Load current config if available
+        current_config = {}
+        if config_path and config_path.exists():
+            try:
+                with open(config_path, 'r') as f:
+                    current_config = yaml.safe_load(f) or {}
+            except Exception as e:
+                logger.error(f"Error loading config: {e}")
+        
+        # Helper to get nested config values safely
+        def get_nested(cfg, keys, default):
+            for key in keys:
+                if isinstance(cfg, dict):
+                    cfg = cfg.get(key, {})
+                else:
+                    return default
+            return cfg if cfg != {} else default
+        
+        # Core values (backward compatible)
+        mode = current_config.get("mode", "development")
+        sparse_enabled = get_nested(current_config, ["sparse_logging", "enabled"], True)
+        sparse_threshold = get_nested(current_config, ["sparse_logging", "sparse_threshold"], 0.1)
+        sparse_top_k = get_nested(current_config, ["sparse_logging", "top_k_values"], 5)
+        compression_enabled = get_nested(current_config, ["compression", "enabled"], True)
+        compression_type = get_nested(current_config, ["compression", "compression_type"], "snappy")
+        compression_level = get_nested(current_config, ["compression", "compression_level"], 1)
+        batch_size = get_nested(current_config, ["logging_frequency", "batch_size"], 1000)
+        time_interval = get_nested(current_config, ["logging_frequency", "time_interval"], 60)
+        custom_fields = current_config.get("custom_fields", ["attention_weights", "feature_maps", "losses"])
+        
+        # Extended values (new features)
+        log_level = get_nested(current_config, ["logging", "log_level"], "detailed")
+        log_type = get_nested(current_config, ["logging", "log_type"], "prediction")
+        quantization_enabled = get_nested(current_config, ["sparse_logging", "quantization", "enabled"], False)
+        quantization_precision = get_nested(current_config, ["sparse_logging", "quantization", "precision"], "8-bit")
+        quantization_scale = get_nested(current_config, ["sparse_logging", "quantization", "scale"], 0.1)
+        storage_backend = get_nested(current_config, ["storage", "backend"], "local")
+        storage_directory = get_nested(current_config, ["storage", "directory"], "mtrace_logs")
+        storage_format = get_nested(current_config, ["storage", "format"], "parquet")
+        tree_enabled = get_nested(current_config, ["tree_models", "enabled"], False)
+        tree_fields = get_nested(current_config, ["tree_models", "required_fields"], [])
+        multimodal_enabled = get_nested(current_config, ["multimodal", "enabled"], False)
+        modalities = get_nested(current_config, ["multimodal", "modalities"], [])
+        fusion_method = get_nested(current_config, ["multimodal", "cross_modal_interactions", "fusion_method"], "attention")
+        
+        return html.Div([
+            html.H2("M-TRACE Configuration", 
+                   style={"marginBottom": "30px", "color": "#2c3e50", "textAlign": "center", "fontWeight": "600", "fontSize": "28px"}),
+            
+            # ===== CORE LOGGING SECTION (ORIGINAL IDs PRESERVED) =====
+            dbc.Card([
+                dbc.CardHeader(html.H5("Core Logging Configuration", className="mb-0", 
+                                     style={"fontWeight": "600", "fontSize": "18px"})),
+                dbc.CardBody([
+                    # Mode Selection - EXACT ID: config-mode
+                    html.Div([
+                        html.Label([
+                            "Logging Mode",
+                            _info_with_tooltip("mode", "Development: Detailed logs for debugging | Production: Minimal overhead")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "12px", "fontSize": "16px"}),
+                        dcc.RadioItems(
+                            id="config-mode",  # CRITICAL: Original ID preserved
+                            options=[
+                                {"label": "Development (Detailed Logging)", "value": "development"},
+                                {"label": "Production (Lightweight Logging)", "value": "production"}
+                            ],
+                            value=mode,
+                            labelStyle={"display": "block", "marginBottom": "10px", "fontSize": "15px", "paddingLeft": "5px"}
+                        )
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    # NEW: Log Level (extended feature)
+                    html.Div([
+                        html.Label([
+                            "Log Detail Level",
+                            _info_with_tooltip("loglevel", "Minimal: essential metrics only | Detailed: full trace | Debug: verbose diagnostics")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Dropdown(
+                            id="log-level",
+                            options=[
+                                {"label": "Minimal", "value": "minimal"},
+                                {"label": "Detailed", "value": "detailed"},
+                                {"label": "Debug", "value": "debug"}
+                            ],
+                            value=log_level,
+                            clearable=False,
+                            style={"width": "100%", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    # NEW: Log Type (extended feature)
+                    html.Div([
+                        html.Label([
+                            "Log Content Type",
+                            _info_with_tooltip("logtype", "Select categories to include in logs. 'All' enables maximum transparency.")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Dropdown(
+                            id="log-type",
+                            options=[
+                                {"label": "Predictions Only", "value": "prediction"},
+                                {"label": "Attention Maps", "value": "attention"},
+                                {"label": "Embeddings", "value": "embedding"},
+                                {"label": "All Fields", "value": "all"}
+                            ],
+                            value=log_type,
+                            clearable=False,
+                            style={"width": "100%", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px"})
+                ], style={"padding": "20px"})
+            ], className="mb-4", style={"boxShadow": "0 2px 12px rgba(0,0,0,0.1)", "borderRadius": "10px"}),
+            
+            # ===== SPARSE LOGGING SECTION (ORIGINAL IDs + QUANTIZATION) =====
+            dbc.Card([
+                dbc.CardHeader(html.H5("Sparse Logging & Quantization", className="mb-0", 
+                                     style={"fontWeight": "600", "fontSize": "18px"})),
+                dbc.CardBody([
+                    # Sparse Logging Toggle - EXACT ID: sparse-logging-enabled
+                    html.Div([
+                        html.Label([
+                            "Enable Sparse Logging",
+                            _info_with_tooltip("sparse", "Log only significant values (|value| > threshold) to reduce storage footprint")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Checklist(
+                            id="sparse-logging-enabled",  # CRITICAL: Original ID
+                            options=[{"label": "Enabled", "value": "enabled"}],
+                            value=["enabled"] if sparse_enabled else [],
+                            labelStyle={"display": "inline-block", "marginLeft": "10px", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    # Sparse Threshold - EXACT ID: sparse-threshold (FIXED CLIPPING)
+                    html.Div([
+                        html.Label([
+                            "Sparse Threshold",
+                            _info_with_tooltip("threshold", "Values with absolute magnitude greater than this threshold will be logged")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "12px", "fontSize": "16px"}),
+                        html.Div([
+                            dcc.Input(
+                                id="sparse-threshold",  # CRITICAL: Original ID
+                                type="number",
+                                value=sparse_threshold,
+                                min=0, max=1, step=0.01,
+                                style={"width": "130px", "padding": "8px", "borderRadius": "5px", "border": "1px solid #ddd", "fontSize": "15px"}
+                            ),
+                            html.Span(" (Log values where |value| > threshold)", 
+                                     style={"marginLeft": "20px", "color": "#555", "fontSize": "14px", "whiteSpace": "nowrap"})
+                        ], style={"display": "flex", "alignItems": "center", "flexWrap": "wrap", "gap": "15px"})
+                    ], style={"padding": "15px 15px 15px 30px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    # Top-K Values - EXACT ID: sparse-top-k
+                    html.Div([
+                        html.Label([
+                            "Top-K Values",
+                            _info_with_tooltip("topk", "Always preserve the top K most significant values per tensor regardless of threshold")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "12px", "fontSize": "16px"}),
+                        html.Div([
+                            dcc.Input(
+                                id="sparse-top-k",  # CRITICAL: Original ID
+                                type="number",
+                                value=sparse_top_k,
+                                min=1, max=100, step=1,
+                                style={"width": "130px", "padding": "8px", "borderRadius": "5px", "border": "1px solid #ddd", "fontSize": "15px"}
+                            ),
+                            html.Span(" values always logged per tensor", 
+                                     style={"marginLeft": "20px", "color": "#555", "fontSize": "14px", "whiteSpace": "nowrap"})
+                        ], style={"display": "flex", "alignItems": "center", "flexWrap": "wrap", "gap": "15px"})
+                    ], style={"padding": "15px 15px 15px 30px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "20px"}),
+                    
+                    # QUANTIZATION (NEW - extended feature)
+                    html.Hr(style={"margin": "25px 0", "borderColor": "#e9ecef", "borderWidth": "1.5px"}),
+                    html.Div([
+                        html.Label([
+                            "Enable Quantization",
+                            _info_with_tooltip("quant", "Apply lossy quantization to further reduce storage (8-bit or 16-bit precision)")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Checklist(
+                            id="quantization-enabled",
+                            options=[{"label": "Enabled", "value": "enabled"}],
+                            value=["enabled"] if quantization_enabled else [],
+                            labelStyle={"display": "inline-block", "marginLeft": "10px", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    html.Div([
+                        html.Div([
+                            html.Label("Precision:", style={"fontWeight": "600", "marginBottom": "8px", "fontSize": "15px"}),
+                            dcc.Dropdown(
+                                id="quantization-precision",
+                                options=[
+                                    {"label": "8-bit (High compression)", "value": "8-bit"},
+                                    {"label": "16-bit (Balanced)", "value": "16-bit"}
+                                ],
+                                value=quantization_precision,
+                                clearable=False,
+                                style={"width": "100%", "fontSize": "15px"}
+                            )
+                        ], style={"marginBottom": "15px"}),
+                        html.Div([
+                            html.Label([
+                                "Scale Factor",
+                                _info_with_tooltip("scale", "Multiplier applied before quantization (smaller = more aggressive compression)")
+                            ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "8px", "fontSize": "15px"}),
+                            dcc.Input(
+                                id="quantization-scale",
+                                type="number",
+                                value=quantization_scale,
+                                min=0.01, max=1.0, step=0.01,
+                                style={"width": "130px", "padding": "8px", "borderRadius": "5px", "border": "1px solid #ddd", "fontSize": "15px"}
+                            )
+                        ], style={"marginTop": "5px"})
+                    ], style={"padding": "15px 15px 15px 30px", "backgroundColor": "#f8f9fa", "borderRadius": "8px"})
+                ], style={"padding": "20px"})
+            ], className="mb-4", style={"boxShadow": "0 2px 12px rgba(0,0,0,0.1)", "borderRadius": "10px"}),
+            
+            # ===== COMPRESSION SECTION (ORIGINAL IDs PRESERVED) =====
+            dbc.Card([
+                dbc.CardHeader(html.H5("Compression Settings", className="mb-0", 
+                                     style={"fontWeight": "600", "fontSize": "18px"})),
+                dbc.CardBody([
+                    # Compression Toggle - EXACT ID: compression-enabled
+                    html.Div([
+                        html.Label([
+                            "Enable Compression",
+                            _info_with_tooltip("compression", "Reduce log size on disk: Snappy (fastest), Zstandard (balanced), Gzip (max compression)")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Checklist(
+                            id="compression-enabled",  # CRITICAL: Original ID
+                            options=[{"label": "Enabled", "value": "enabled"}],
+                            value=["enabled"] if compression_enabled else [],
+                            labelStyle={"display": "inline-block", "marginLeft": "10px", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    # Algorithm - EXACT ID: compression-algorithm
+                    html.Div([
+                        html.Label("Compression Algorithm:", style={"fontWeight": "600", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Dropdown(
+                            id="compression-algorithm",  # CRITICAL: Original ID
+                            options=[
+                                {"label": "Snappy (Fastest)", "value": "snappy"},
+                                {"label": "Zstandard (Balanced)", "value": "zstd"},
+                                {"label": "Gzip (Maximum Compression)", "value": "gzip"},
+                                {"label": "None", "value": "none"}
+                            ],
+                            value=compression_type,
+                            clearable=False,
+                            style={"width": "100%", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    # Level - EXACT ID: compression-level
+                    html.Div([
+                        html.Label([
+                            "Compression Level",
+                            _info_with_tooltip("complevel", "1 = fastest/least compression, 9 = slowest/max compression (ignored by Snappy)")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Slider(
+                            id="compression-level",  # CRITICAL: Original ID
+                            min=1, max=9, step=1,
+                            value=compression_level,
+                            marks={i: str(i) for i in range(1, 10)},
+                            tooltip={"placement": "bottom", "always_visible": True},
+                            included=False
+                        ),
+                        html.Small("1 = Fastest, 9 = Maximum Compression", style={"marginLeft": "10px", "color": "#666", "fontSize": "13px"})
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px"})
+                ], style={"padding": "20px"})
+            ], className="mb-4", style={"boxShadow": "0 2px 12px rgba(0,0,0,0.1)", "borderRadius": "10px"}),
+            
+            # ===== LOGGING FREQUENCY (ORIGINAL IDs PRESERVED) =====
+            dbc.Card([
+                dbc.CardHeader(html.H5("Logging Frequency", className="mb-0", 
+                                     style={"fontWeight": "600", "fontSize": "18px"})),
+                dbc.CardBody([
+                    html.Div([
+                        html.Label([
+                            "Batch Size Trigger",
+                            _info_with_tooltip("batch", "Log after processing this many samples (whichever trigger fires first)")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "12px", "fontSize": "16px"}),
+                        html.Div([
+                            dcc.Input(
+                                id="logging-batch-size",  # CRITICAL: Original ID
+                                type="number",
+                                value=batch_size,
+                                min=1, max=10000, step=100,
+                                style={"width": "150px", "padding": "8px", "borderRadius": "5px", "border": "1px solid #ddd", "fontSize": "15px"}
+                            ),
+                            html.Span(" samples", style={"marginLeft": "15px", "color": "#555", "fontSize": "15px"})
+                        ], style={"display": "flex", "alignItems": "center", "flexWrap": "wrap", "gap": "15px"})
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    html.Div([
+                        html.Label([
+                            "Time Interval Trigger",
+                            _info_with_tooltip("interval", "Log after this many seconds have elapsed (whichever trigger fires first)")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "12px", "fontSize": "16px"}),
+                        html.Div([
+                            dcc.Input(
+                                id="logging-time-interval",  # CRITICAL: Original ID
+                                type="number",
+                                value=time_interval,
+                                min=1, max=3600, step=10,
+                                style={"width": "150px", "padding": "8px", "borderRadius": "5px", "border": "1px solid #ddd", "fontSize": "15px"}
+                            ),
+                            html.Span(" seconds", style={"marginLeft": "15px", "color": "#555", "fontSize": "15px"})
+                        ], style={"display": "flex", "alignItems": "center", "flexWrap": "wrap", "gap": "15px"})
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px"})
+                ], style={"padding": "20px"})
+            ], className="mb-4", style={"boxShadow": "0 2px 12px rgba(0,0,0,0.1)", "borderRadius": "10px"}),
+            
+            # ===== STORAGE CONFIGURATION (NEW) =====
+            dbc.Card([
+                dbc.CardHeader(html.H5("Storage Configuration", className="mb-0", 
+                                     style={"fontWeight": "600", "fontSize": "18px"})),
+                dbc.CardBody([
+                    html.Div([
+                        html.Label([
+                            "Storage Backend",
+                            _info_with_tooltip("storage", "Local filesystem for development, S3/HDFS for distributed production environments")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Dropdown(
+                            id="storage-backend",
+                            options=[
+                                {"label": "Local Filesystem", "value": "local"},
+                                {"label": "Amazon S3", "value": "s3"},
+                                {"label": "HDFS", "value": "hdfs"}
+                            ],
+                            value=storage_backend,
+                            clearable=False,
+                            style={"width": "100%", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    html.Div([
+                        html.Label([
+                            "Storage Directory / Bucket",
+                            _info_with_tooltip("directory", "Local path or S3 bucket name where logs will be stored")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Input(
+                            id="storage-directory",
+                            type="text",
+                            value=storage_directory,
+                            style={"width": "100%", "padding": "10px", "borderRadius": "5px", "border": "1px solid #ddd", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    html.Div([
+                        html.Label("Storage Format:", style={"fontWeight": "600", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Dropdown(
+                            id="storage-format",
+                            options=[{"label": "Parquet (Columnar)", "value": "parquet"}],
+                            value=storage_format,
+                            clearable=False,
+                            style={"width": "100%", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px"})
+                ], style={"padding": "20px"})
+            ], className="mb-4", style={"boxShadow": "0 2px 12px rgba(0,0,0,0.1)", "borderRadius": "10px"}),
+            
+            # ===== MODEL-SPECIFIC: TREE MODELS (NEW) =====
+            dbc.Card([
+                dbc.CardHeader(html.H5("Tree Model Support", className="mb-0", 
+                                     style={"fontWeight": "600", "fontSize": "18px"})),
+                dbc.CardBody([
+                    html.Div([
+                        html.Label([
+                            "Enable Tree Model Logging",
+                            _info_with_tooltip("tree", "Specialized logging for decision trees, random forests, and gradient boosting machines")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Checklist(
+                            id="tree-models-enabled",
+                            options=[{"label": "Enabled", "value": "enabled"}],
+                            value=["enabled"] if tree_enabled else [],
+                            labelStyle={"display": "inline-block", "marginLeft": "10px", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    html.Div([
+                        html.Label([
+                            "Required Tree Fields",
+                            _info_with_tooltip("treefields", "Select specialized fields to log for tree-based models")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "12px", "fontSize": "16px"}),
+                        dcc.Checklist(
+                            id="tree-required-fields",
+                            options=[
+                                {"label": "Decision Paths", "value": "decision_paths"},
+                                {"label": "Node Split Conditions", "value": "node_split_conditions"},
+                                {"label": "Tree Votes", "value": "tree_votes"},
+                                {"label": "Local Feature Contributions", "value": "local_feature_contributions"}
+                            ],
+                            value=tree_fields,
+                            labelStyle={"display": "block", "marginBottom": "8px", "paddingLeft": "10px", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px 15px 15px 30px", "backgroundColor": "#f8f9fa", "borderRadius": "8px"})
+                ], style={"padding": "20px"})
+            ], className="mb-4", style={"boxShadow": "0 2px 12px rgba(0,0,0,0.1)", "borderRadius": "10px"}),
+            
+            # ===== MULTIMODAL SUPPORT (NEW) =====
+            dbc.Card([
+                dbc.CardHeader(html.H5("Multimodal Model Support", className="mb-0", 
+                                     style={"fontWeight": "600", "fontSize": "18px"})),
+                dbc.CardBody([
+                    html.Div([
+                        html.Label([
+                            "Enable Multimodal Logging",
+                            _info_with_tooltip("multimodal", "Support for models processing multiple data types (text, image, audio)")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Checklist(
+                            id="multimodal-enabled",
+                            options=[{"label": "Enabled", "value": "enabled"}],
+                            value=["enabled"] if multimodal_enabled else [],
+                            labelStyle={"display": "inline-block", "marginLeft": "10px", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    html.Div([
+                        html.Label([
+                            "Supported Modalities",
+                            _info_with_tooltip("modalities", "Select data types processed by your multimodal model")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "12px", "fontSize": "16px"}),
+                        dcc.Checklist(
+                            id="modalities",
+                            options=[
+                                {"label": "Text", "value": "text"},
+                                {"label": "Image", "value": "image"},
+                                {"label": "Audio", "value": "audio"}
+                            ],
+                            value=modalities,
+                            labelStyle={"display": "inline-block", "marginRight": "25px", "fontSize": "15px", "paddingLeft": "5px"}
+                        )
+                    ], style={"padding": "15px 15px 15px 30px", "backgroundColor": "#f8f9fa", "borderRadius": "8px", "marginBottom": "15px"}),
+                    
+                    html.Div([
+                        html.Label([
+                            "Cross-Modal Fusion Method",
+                            _info_with_tooltip("fusion", "How different modalities are combined in the model architecture")
+                        ], style={"fontWeight": "600", "display": "flex", "alignItems": "center", "marginBottom": "10px", "fontSize": "16px"}),
+                        dcc.Dropdown(
+                            id="fusion-method",
+                            options=[
+                                {"label": "Attention-based Fusion", "value": "attention"},
+                                {"label": "Concatenation", "value": "concat"}
+                            ],
+                            value=fusion_method,
+                            clearable=False,
+                            style={"width": "100%", "fontSize": "15px"}
+                        )
+                    ], style={"padding": "15px 15px 15px 30px", "backgroundColor": "#f8f9fa", "borderRadius": "8px"})
+                ], style={"padding": "20px"})
+            ], className="mb-4", style={"boxShadow": "0 2px 12px rgba(0,0,0,0.1)", "borderRadius": "10px"}),
+            
+            # ===== CUSTOM FIELDS (ORIGINAL ID PRESERVED) =====
+            dbc.Card([
+                dbc.CardHeader(html.H5("Custom Fields to Log", className="mb-0", 
+                                     style={"fontWeight": "600", "fontSize": "18px"})),
+                dbc.CardBody([
+                    html.P("Select additional diagnostic fields to log (default fields always included):", 
+                           style={"color": "#555", "marginBottom": "15px", "fontSize": "15px", "paddingLeft": "5px"}),
+                    dcc.Checklist(
+                        id="custom-fields",  # CRITICAL: Original ID
+                        options=[
+                            {"label": "Attention Weights", "value": "attention_weights"},
+                            {"label": "Feature Maps", "value": "feature_maps"},
+                            {"label": "Gradients", "value": "gradients"},
+                            {"label": "Feature Importance", "value": "feature_importance"},
+                            {"label": "Layer Activations", "value": "layer_activations"},
+                            {"label": "Uncertainty Estimates", "value": "uncertainty_estimates"},
+                            {"label": "Training Dynamics", "value": "training_dynamics"},
+                            {"label": "Input/Output Data", "value": "contextual_info"}
+                        ],
+                        value=custom_fields,
+                        labelStyle={"display": "block", "marginBottom": "10px", "fontSize": "15px", "paddingLeft": "10px"}
+                    )
+                ], style={"padding": "20px"})
+            ], className="mb-4", style={"boxShadow": "0 2px 12px rgba(0,0,0,0.1)", "borderRadius": "10px"}),
+            
+            # ===== ACTION BUTTONS (ORIGINAL IDs PRESERVED) =====
+            html.Div([
+                dbc.Button(
+                    "Save",
+                    id="save-config-btn",  # CRITICAL: Original ID
+                    n_clicks=0,
+                    color="success",
+                    size="lg",
+                    style={"width": "220px", "fontWeight": "600", "fontSize": "17px", "padding": "12px 25px"}
+                ),
+                dbc.Button(
+                    "Reset",
+                    id="reset-config-btn",  # CRITICAL: Original ID
+                    n_clicks=0,
+                    color="danger",
+                    size="lg",
+                    style={"width": "220px", "fontWeight": "600", "fontSize": "17px", "padding": "12px 25px", "marginLeft": "20px"}
+                ),
+                html.Div(id="config-save-status", 
+                        style={"marginTop": "25px", "fontSize": "18px", "minHeight": "30px", "textAlign": "center", "fontWeight": "500"})
+            ], style={"textAlign": "center", "paddingTop": "25px", "borderTop": "2px solid #e9ecef", "marginTop": "20px"})
+        ], style={
+            "padding": "30px 20px", 
+            "maxWidth": "980px", 
+            "margin": "0 auto 50px",
+            "backgroundColor": "white",
+            "borderRadius": "15px",
+            "boxShadow": "0 5px 30px rgba(0,0,0,0.12)",
+            "fontFamily": "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+        })
+    
+    @staticmethod
+    def save_config(
+        config_path: Path,
+        mode: str,
+        sparse_enabled: bool,
+        sparse_threshold: float,
+        sparse_top_k: int,
+        compression_enabled: bool,
+        compression_algorithm: str,
+        compression_level: int,
+        batch_size: int,
+        time_interval: int,
+        custom_fields: list,
+        # ===== EXTENDED PARAMETERS (BACKWARD COMPATIBLE WITH DEFAULTS) =====
+        log_level: str = "detailed",
+        log_type: str = "prediction",
+        quantization_enabled: bool = False,
+        quantization_precision: str = "8-bit",
+        quantization_scale: float = 0.1,
+        storage_backend: str = "local",
+        storage_directory: str = "mtrace_logs",
+        storage_format: str = "parquet",
+        tree_models_enabled: bool = False,
+        tree_required_fields: list = None,
+        multimodal_enabled: bool = False,
+        modalities: list = None,
+        fusion_method: str = "attention"
+    ) -> bool:
+        """
+        Save configuration to YAML file with FULL feature support.
+        Signature maintains backward compatibility - extended parameters have defaults.
+        
+        Args:
+            config_path: Path to save config.yml
+            mode: "development" or "production"
+            sparse_enabled: Whether sparse logging is enabled
+            sparse_threshold: Sparse logging threshold
+            sparse_top_k: Top-k values to log
+            compression_enabled: Whether compression is enabled
+            compression_algorithm: Compression algorithm
+            compression_level: Compression level (1-9)
+            batch_size: Logging batch size
+            time_interval: Time interval in seconds
+            custom_fields: List of custom fields to log
+            # Extended parameters (optional, defaults preserve original behavior):
+            log_level: "minimal", "detailed", or "debug"
+            log_type: "prediction", "attention", "embedding", or "all"
+            quantization_enabled: Whether quantization is enabled
+            quantization_precision: "8-bit" or "16-bit"
+            quantization_scale: Scale factor for quantization
+            storage_backend: "local", "s3", or "hdfs"
+            storage_directory: Directory/bucket name
+            storage_format: Storage format (e.g., "parquet")
+            tree_models_enabled: Whether tree model logging is enabled
+            tree_required_fields: List of tree-specific fields to log
+            multimodal_enabled: Whether multimodal support is enabled
+            modalities: List of modalities (e.g., ["text", "image"])
+            fusion_method: "attention" or "concat"
+        
+        Returns:
+            True if save succeeded
+        """
+        try:
+            # Build FULL config with all features
+            config = {
+                "mode": mode,
+                "logging": {
+                    "log_level": log_level,
+                    "log_type": log_type
+                },
+                "sparse_logging": {
+                    "enabled": sparse_enabled,
+                    "sparse_threshold": sparse_threshold,
+                    "top_k_values": sparse_top_k,
+                    "quantization": {
+                        "enabled": quantization_enabled,
+                        "precision": quantization_precision,
+                        "scale": quantization_scale
+                    }
+                },
+                "compression": {
+                    "enabled": compression_enabled,
+                    "compression_type": compression_algorithm,
+                    "compression_level": compression_level
+                },
+                "logging_frequency": {
+                    "batch_size": batch_size,
+                    "time_interval": time_interval
+                },
+                "storage": {
+                    "backend": storage_backend,
+                    "directory": storage_directory,
+                    "format": storage_format
+                },
+                "tree_models": {
+                    "enabled": tree_models_enabled,
+                    "required_fields": tree_required_fields or []
+                },
+                "multimodal": {
+                    "enabled": multimodal_enabled,
+                    "modalities": modalities or [],
+                    "cross_modal_interactions": {
+                        "fusion_method": fusion_method
+                    }
+                },
+                "custom_fields": custom_fields,
+                "default_fields": [
+                    "model_type", "framework", "timestamp", "run_id", 
+                    "mode", "layer_name", "losses"
+                ]
+            }
+            
+            # Ensure parent directory exists
+            config_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Save with clean formatting
+            with open(config_path, 'w') as f:
+                yaml.dump(config, f, default_flow_style=False, sort_keys=False, indent=2)
+            
+            logger.info(f"Full configuration successfully saved to {config_path}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error saving configuration: {e}", exc_info=True)
+            return False

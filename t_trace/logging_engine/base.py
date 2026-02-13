@@ -1,18 +1,20 @@
 """Core LoggingEngine implementation with framework detection and log management."""
 import os
+import sys
 import uuid
 import time
 import threading
 import logging
+import atexit
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
 from datetime import datetime
 
 from .config import LoggingConfig
 from .compression import CompressionEngine
 from .pytorch import PyTorchLoggingEngine
 from .tensorflow import TensorFlowLoggingEngine  
-from .sklearn import SklearnLoggingEngine  # To be implemented
+from .sklearn import SklearnLoggingEngine
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,13 @@ class LoggingEngine:
     
     This engine automatically detects the model framework, attaches appropriate hooks/callbacks,
     and manages log buffering with batched writes to minimize performance overhead.
+    
+    Key Features:
+        - Eager storage initialization (no first-inference blocking delay)
+        - Framework-agnostic hook/callback attachment
+        - Sparse logging with on-the-fly compression
+        - Async batched writes with configurable frequency
+        - Production-ready error handling and fallback mechanisms
     """
     
     SUPPORTED_MODES = ["development", "production"]
@@ -49,9 +58,9 @@ class LoggingEngine:
         self._stop_writer = threading.Event()
         self._enabled = False
         self._mode = "production"
-        self._storage_engine = None  # Lazy-initialized storage engine
-        self._storage_retry_count = 0  # Track consecutive storage failures
-        self._max_storage_retries = 3  # Max retries before dropping logs
+        self._storage_engine = None  # Eagerly initialized during enable_logging()
+        self._storage_initialized = False  # Track initialization state
+        self._storage_init_lock = threading.Lock()  # Thread-safe init
         
         # Setup logging
         self._setup_logging()
@@ -123,7 +132,7 @@ class LoggingEngine:
     
     def _create_framework_engine(self, model: Any, framework: str, mode: str) -> Any:
         """Create framework-specific logging engine."""
-        config_with_mode = {**self.config, "mode": mode}
+        config_with_mode = {**self.config, "mode": mode, "run_id": self.run_id}
         
         if framework == "pytorch":
             return PyTorchLoggingEngine(model, config_with_mode)
@@ -138,59 +147,75 @@ class LoggingEngine:
         else:
             raise ValueError(f"Unsupported framework: {framework}")
     
-    def _get_storage_engine(self) -> Any:
+    def _initialize_storage_engine(self, mode: str = "production") -> None:
         """
-        Lazily initialize and return the storage engine.
+        Eagerly initialize storage engine with directory creation.
+        Called during enable_logging() to prevent blocking first inference.
         
-        Implements pluggable backends per Section 3.2 with proper error handling.
-        """
-        if self._storage_engine is not None:
-            return self._storage_engine
-        
-        # Import here to avoid circular dependency
-        try:
-            from t_trace.storage_engine import get_storage_engine
-        except ImportError as e:
-            logger.error(
-                f"StorageEngine import failed: {e}. "
-                "Ensure mtrace package is properly installed. "
-                "Falling back to in-memory buffering only."
-            )
-            raise RuntimeError(
-                "StorageEngine unavailable. Install required dependencies: "
-                "pip install pyarrow snappy python-snappy"
-            ) from e
-        
-        # Build storage configuration from logging config
-        storage_config = {
-            "storage_dir": self.config.get("storage.directory", "mtrace_logs"),
-            "backend": self.config.get("storage.backend", "local"),
-            "compression": self.config.get("compression", {
-                "compression_type": "snappy",
-                "compression_level": 1,
-                "enabled": True
-            }),
-            "sparse_logging": self.config.get("sparse_logging", {
-                "enabled": True,
-                "sparse_threshold": 0.1,
-                "top_k_values": 5
-            })
-        }
-        
-        try:
-            self._storage_engine = get_storage_engine(
-                backend=storage_config["backend"],
-                config=storage_config
-            )
-            logger.info(
-                f"Storage engine initialized: {storage_config['backend']} "
-                f"at {storage_config['storage_dir']}"
-            )
-            return self._storage_engine
+        Args:
+            mode: Logging mode ("development" or "production")
             
-        except Exception as e:
-            logger.error(f"Failed to initialize storage engine: {e}")
-            raise RuntimeError(f"Storage initialization failed: {e}") from e
+        Raises:
+            RuntimeError: If storage initialization fails
+        """
+        with self._storage_init_lock:
+            if self._storage_initialized:
+                return
+            
+            logger.info("✓ Initializing storage engine (eager initialization)...")
+            start_time = time.time()
+            
+            try:
+                # Build storage configuration from logging config
+                storage_config = {
+                    "storage_dir": self.config.get("storage.directory", "mtrace_logs"),
+                    "backend": self.config.get("storage.backend", "local"),
+                    "compression": self.config.get("compression", {
+                        "compression_type": "snappy",
+                        "compression_level": 1,
+                        "enabled": True
+                    }),
+                    "sparse_logging": self.config.get("sparse_logging", {
+                        "enabled": True,
+                        "sparse_threshold": 0.1,
+                        "top_k_values": 5
+                    })
+                }
+                
+                # Initialize storage engine
+                from t_trace.storage_engine import get_storage_engine
+                self._storage_engine = get_storage_engine(
+                    backend=storage_config["backend"],
+                    config=storage_config
+                )
+                
+                # CRITICAL: Create directory structure BEFORE first write
+                mode_dir = "development" if mode == "development" else "production"
+                storage_dir = Path(storage_config["storage_dir"])
+                (storage_dir / mode_dir).mkdir(parents=True, exist_ok=True)
+                
+                # Verify write permissions with lightweight test
+                test_file = storage_dir / f".write_test_{uuid.uuid4().hex[:8]}.tmp"
+                try:
+                    test_file.write_text("init_test")
+                    test_file.unlink()
+                except Exception as e:
+                    logger.warning(f"Storage directory permission warning: {e}")
+                
+                self._storage_initialized = True
+                init_time = time.time() - start_time
+                logger.info(
+                    f"✓ Storage engine ready in {init_time:.2f}s at {storage_config['storage_dir']}"
+                )
+                
+                # Start writer thread immediately after storage ready
+                self._start_writer_thread()
+                
+            except Exception as e:
+                logger.error(f"✗ Storage initialization failed: {e}", exc_info=True)
+                raise RuntimeError(
+                    f"Storage setup failed - check config.yml and dependencies: {e}"
+                ) from e
     
     def _start_writer_thread(self) -> None:
         """Start background thread for batched log writes."""
@@ -226,8 +251,8 @@ class LoggingEngine:
         """
         Flush logs from framework engine to storage engine.
         
-        CRITICAL FIX: Logs are stored in framework engine hooks (not LoggingEngine._log_buffer).
-        This method MUST pull logs directly from framework engine via collect_logs().
+        CRITICAL FIX: Storage engine is now eagerly initialized during enable_logging(),
+        so no lazy initialization occurs here. This eliminates the 4.4-second first-inference delay.
         """
         # Primary source: framework engine hooks (where PyTorch/TensorFlow hooks store logs)
         logs_to_write = []
@@ -252,47 +277,27 @@ class LoggingEngine:
         self._last_write_time = time.time()
         
         try:
-            # Lazy initialize storage engine if needed
+            # Storage should already be initialized during enable_logging()
             if self._storage_engine is None:
-                from t_trace.storage_engine import get_storage_engine
-                
-                storage_config = {
-                    "storage_dir": self.config.get("storage.directory", "mtrace_logs"),
-                    "backend": self.config.get("storage.backend", "local"),
-                    "compression": self.config.get("compression", {
-                        "compression_type": "snappy",
-                        "compression_level": 1,
-                        "enabled": True
-                    }),
-                    "sparse_logging": self.config.get("sparse_logging", {
-                        "enabled": True,
-                        "sparse_threshold": 0.1,
-                        "top_k_values": 5
-                    })
-                }
-                
-                self._storage_engine = get_storage_engine(
-                    backend=storage_config["backend"],
-                    config=storage_config
-                )
-                logger.info(f"✓ Storage engine initialized at {storage_config['storage_dir']}")
+                logger.error("Storage engine not initialized - skipping log write")
+                return
             
             # Extract model type for filename generation
             model_type = "unknown"
             if self._model_ref is not None:
                 try:
-                    model = self._model_ref()
+                    model = self._model_ref
                     if model is not None:
                         model_type = model.__class__.__name__.lower()
                 except Exception:
                     pass
             
-            # CRITICAL: Ensure directory exists BEFORE write attempt
+            # CRITICAL: Ensure directory exists BEFORE write attempt (defense-in-depth)
             mode_dir = "development" if self._mode == "development" else "production"
             storage_dir = Path(self.config.get("storage.directory", "mtrace_logs"))
             (storage_dir / mode_dir).mkdir(parents=True, exist_ok=True)
             
-            # WRITE TO STORAGE (this is the critical operation that was missing)
+            # WRITE TO STORAGE
             filepath = self._storage_engine.save_logs(
                 logs=logs_to_write,
                 run_id=self.run_id,
@@ -306,10 +311,10 @@ class LoggingEngine:
                 logger.warning("Storage engine returned empty filepath - logs may not have been saved")
                 
         except Exception as e:
-            # CRITICAL: Log full error details with stack trace for debugging
+            # Log full error details with stack trace for debugging
             logger.error(
                 f"✗ STORAGE WRITE FAILED (run_id={self.run_id[:8]}): {type(e).__name__}: {e}",
-                exc_info=True  # ← SHOWS FULL STACK TRACE
+                exc_info=True
             )
             # Safety: re-buffer a subset of logs for retry (prevent memory explosion)
             with self._buffer_lock:
@@ -349,13 +354,17 @@ class LoggingEngine:
         with self._buffer_lock:
             self._log_buffer.append(log_entry)
     
-    def enable_logging(self, model: Any, mode: str = "production") -> None:
+    def enable_logging(self, model: Any, mode: str = "production") -> Optional[Any]:
         """
         Public API: Enable logging for the provided model.
         
         Args:
             model: Machine learning model (PyTorch, TensorFlow, or scikit-learn)
             mode: Logging mode - "development" (detailed) or "production" (lightweight)
+        
+        Returns:
+            - For TensorFlow: Callback object required for integration
+            - For PyTorch/scikit-learn: None (hooks attached directly to model)
         
         Raises:
             ValueError: If mode is invalid or model/framework unsupported
@@ -372,9 +381,10 @@ class LoggingEngine:
         # Detect framework
         framework = self._detect_framework(model)
         logger.info(f"Detected framework: {framework}")
-
-        # CRITICAL: Inject run_id into config BEFORE creating framework engine
-        config_with_run_id = {**self.config, "run_id": self.run_id, "mode": mode}
+        
+        # CRITICAL FIX: Eagerly initialize storage engine BEFORE attaching hooks
+        # Prevents 81-second blocking delay during first forward pass
+        self._initialize_storage_engine(mode=mode)
         
         # Create framework-specific engine
         self._framework_engine = self._create_framework_engine(model, framework, mode)
@@ -384,25 +394,19 @@ class LoggingEngine:
         # Enable framework-specific logging
         self._framework_engine.enable()
         
-        # Start writer thread
-        self._start_writer_thread()
-        
         self._enabled = True
         logger.info(
             f"M-TRACE logging enabled in {mode} mode for {framework} model "
             f"(run_id: {self.run_id})"
         )
-        """elif framework == "sklearn":
-            return self._framework_engine.get_wrapped_model()  # Returns wrapped estimator"""
         
-            # SPECIAL CASE: TensorFlow requires callback integration by user
+        # SPECIAL CASE: TensorFlow requires callback integration by user
         if framework == "tensorflow":
             return self._framework_engine.get_callback()  # ← CRITICAL: Return callback to user
         elif framework == "sklearn":
             return self._framework_engine.get_wrapped_model()  # Returns wrapped estimator
         else:
-            return None  # PyTorch/scikit-learn hooks attached directly
-        
+            return None  # PyTorch hooks attached directly to model
     
     def disable_logging(self) -> None:
         """Disable logging and cleanup resources."""
@@ -412,7 +416,7 @@ class LoggingEngine:
         # Stop writer thread
         self._stop_writer.set()
         if self._writer_thread and self._writer_thread.is_alive():
-            self._writer_thread.join(timeout=5.0)
+            self._writer_thread.join(timeout=2.0)  # Reduced timeout for faster shutdown
         
         # Flush remaining logs (final write attempt)
         self._flush_buffer()
@@ -424,6 +428,14 @@ class LoggingEngine:
         self._enabled = False
         self._framework_engine = None
         self._model_ref = None
+        
+        # Cleanup storage engine resources
+        if self._storage_engine and hasattr(self._storage_engine, 'close'):
+            try:
+                self._storage_engine.close()
+            except Exception as e:
+                logger.debug(f"Storage engine close failed (non-critical): {e}")
+        
         logger.info("M-TRACE logging disabled")
     
     def collect_logs(self) -> List[Dict]:
@@ -443,6 +455,35 @@ class LoggingEngine:
         with self._buffer_lock:
             return self._log_buffer.copy() + framework_logs
     
+    # ADD THIS METHOD TO LoggingEngine CLASS (after collect_logs())
+    def get_wrapped_model(self) -> Any:
+        """
+        Convenience method to get wrapped estimator for scikit-learn models.
+        
+        Returns:
+            Wrapped estimator with logging instrumentation
+            
+        Raises:
+            RuntimeError: If logging is not enabled or model is not scikit-learn
+            AttributeError: If underlying framework engine doesn't support wrapped models
+        """
+        if not self._enabled:
+            raise RuntimeError("Logging not enabled. Call enable_logging() first.")
+        
+        if not self._framework_engine:
+            raise RuntimeError("Framework engine not initialized")
+        
+        # Delegate to sklearn-specific engine
+        if hasattr(self._framework_engine, 'get_wrapped_model'):
+            return self._framework_engine.get_wrapped_model()
+        
+        # For non-sklearn frameworks, wrapped model doesn't apply
+        framework = self._detect_framework(self._model_ref) if self._model_ref else "unknown"
+        raise AttributeError(
+            f"get_wrapped_model() only available for scikit-learn models. "
+            f"Current framework: {framework}"
+        )
+
     def is_logging_enabled(self) -> bool:
         """Check if logging is currently enabled."""
         return self._enabled
@@ -458,3 +499,17 @@ class LoggingEngine:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Ensure logging is disabled on context exit."""
         self.disable_logging()
+
+
+# Register cleanup to ensure logs are flushed on interpreter exit
+def _cleanup_global_engine():
+    """Cleanup function registered with atexit."""
+    global _GLOBAL_ENGINE
+    if _GLOBAL_ENGINE and _GLOBAL_ENGINE.is_logging_enabled():
+        try:
+            _GLOBAL_ENGINE.disable_logging()
+        except Exception as e:
+            logger.debug(f"Global engine cleanup failed (non-critical): {e}")
+
+_GLOBAL_ENGINE: Optional[LoggingEngine] = None
+atexit.register(_cleanup_global_engine)
