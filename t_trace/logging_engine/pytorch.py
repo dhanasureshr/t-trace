@@ -24,8 +24,7 @@ class PyTorchHook:
         self._sparse_threshold = config.get("sparse_logging", {}).get("sparse_threshold", 0.1)
         self._top_k = config.get("sparse_logging", {}).get("top_k_values", 5)
     
-    def _sparse_filter(self, tensor: torch.Tensor) -> Dict[str, Any]:
-        """Apply sparse logging AFTER forward pass (off critical path)."""
+    def _sparse_filter(self, tensor: torch.Tensor, is_attention: bool = False) -> Dict[str, Any]:
         if tensor.numel() == 0:
             return {
                 "sparse_values": [],
@@ -37,9 +36,50 @@ class PyTorchHook:
         
         np_tensor = tensor.detach().cpu().numpy()
         abs_vals = np.abs(np_tensor)
-        mask = abs_vals > self._sparse_threshold
-        indices = np.where(mask)
         
+        # Track whether per-head preservation was applied
+        used_per_head_preservation = False
+        
+        # === CORRECTED PER-HEAD LOGIC (self-contained with bypass) ===
+        if is_attention and np_tensor.ndim >= 3:
+            mask = abs_vals > self._sparse_threshold
+            top_k_per_head = self.config.get("sparse_logging", {}).get("top_k_per_head", 3)
+            
+            if np_tensor.ndim == 4:  # [batch, heads, seq, seq]
+                batch_size, num_heads, seq_len, _ = np_tensor.shape
+                for b in range(batch_size):
+                    for h in range(num_heads):
+                        head_flat = np_tensor[b, h, :, :].flatten()
+                        abs_head = np.abs(head_flat)
+                        k = min(top_k_per_head, len(abs_head))
+                        if k > 0:
+                            topk_idx = np.argpartition(abs_head, -k)[-k:]
+                            rows = topk_idx // seq_len
+                            cols = topk_idx % seq_len
+                            for r, c in zip(rows, cols):
+                                mask[b, h, r, c] = True
+            elif np_tensor.ndim == 3:  # [batch, seq, seq]
+                batch_size, seq_len, _ = np_tensor.shape
+                for b in range(batch_size):
+                    batch_vals = np_tensor[b, :, :].flatten()
+                    abs_batch = np.abs(batch_vals)
+                    k = min(top_k_per_head, len(abs_batch))
+                    if k > 0:
+                        topk_idx = np.argpartition(abs_batch, -k)[-k:]
+                        rows = topk_idx // seq_len
+                        cols = topk_idx % seq_len
+                        for r, c in zip(rows, cols):
+                            mask[b, r, c] = True
+            
+            indices = np.where(mask)
+            used_per_head_preservation = True  # ← FLAG FOR BYPASS
+        
+        else:
+            mask = abs_vals > self._sparse_threshold
+            indices = np.where(mask)
+        # ===========================================================
+        
+        # Handle empty case
         if len(indices[0]) == 0:
             flat = abs_vals.flatten()
             if len(flat) == 0:
@@ -64,10 +104,22 @@ class PyTorchHook:
                 "sparse_type": "top_k"
             }
         
+        # Extract values at masked indices
         values = np_tensor[indices]
         abs_selected = abs_vals[indices]
-        sorted_order = np.argsort(-abs_selected)
-        limited_order = sorted_order[:self._top_k]
+        
+        # === CRITICAL FIX: BYPASS GLOBAL TOP-K FOR PER-HEAD PRESERVATION ===
+        if used_per_head_preservation:
+            # PRESERVE ALL values that passed threshold OR per-head top-k
+            # No global cutoff - trajectory fidelity requires full per-head representation
+            limited_order = np.arange(len(values))  # ← Keep ALL values
+            sparse_type = "per_head_top_k"
+        else:
+            # Standard global top-k for non-attention tensors
+            sorted_order = np.argsort(-abs_selected)
+            limited_order = sorted_order[:self._top_k]
+            sparse_type = "threshold"
+        # ===================================================================
         
         flat_indices = np.ravel_multi_index(
             [idx[limited_order] for idx in indices],
@@ -79,8 +131,69 @@ class PyTorchHook:
             "sparse_indices": flat_indices.tolist(),
             "shape": list(tensor.shape),
             "threshold_applied": self._sparse_threshold,
-            "sparse_type": "threshold"
+            "sparse_type": sparse_type  # Now correctly reports per_head_top_k
         }
+    
+    def _extract_attention_weights(self, module: nn.Module, output: Any) -> Optional[np.ndarray]:
+        """
+        Extract attention weights from transformer layers with framework-aware detection.
+        Handles: PyTorch nn.MultiheadAttention, Hugging Face BERT/CLIP attention layers.
+        
+        Returns:
+            np.ndarray of attention weights (shape: [batch, heads, seq_len, seq_len]) 
+            or None if not applicable
+        """
+        try:
+            # Case 1: Hugging Face transformers (BERT, CLIP) - attention in output tuple
+            if isinstance(output, tuple) and len(output) > 1:
+                # BERT/CLIP: (hidden_states, attentions) where attentions is tuple of layer attentions
+                if hasattr(output[1], '__len__') and len(output[1]) > 0:
+                    attn = output[1][-1]  # Last attention layer in this block
+                    if isinstance(attn, torch.Tensor):
+                        return attn.detach().cpu().numpy()
+                    
+            # === CRITICAL ENHANCEMENT FOR BERT: Direct SelfAttention submodule detection ===
+            # Case 1b: Hugging Face attention submodules (BertSelfAttention, SdpaAttention)
+            # These modules return (context_layer, attention_probs) directly during forward pass
+            module_class_name = module.__class__.__name__
+            if any(pattern in module_class_name for pattern in [
+                'SelfAttention',    # BERT/RoBERTa: BertSelfAttention
+                'SdpaAttention',    # Newer HF models using SDPA
+                'Attention',        # Generic attention modules (CLIP, ViT)
+                'MultiHeadSelfAttention'  # Some custom implementations
+            ]):
+                # HF attention modules typically return (context, attention_probs) tuple
+                if isinstance(output, tuple) and len(output) >= 2:
+                    attn_probs = output[1]  # attention_probs tensor
+                    if isinstance(attn_probs, torch.Tensor) and attn_probs.dim() >= 3:
+                        # Validate shape: [batch, heads, seq_len, seq_len] or [batch, seq_len, seq_len]
+                        if attn_probs.dim() == 3:  # [batch, seq_len, seq_len]
+                            # Expand to 4D for consistency: [batch, 1, seq_len, seq_len]
+                            attn_probs = attn_probs.unsqueeze(1)
+                        return attn_probs.detach().cpu().numpy()
+            # ==============================================================================
+            
+            # Case 2: PyTorch nn.MultiheadAttention - check module state
+            if isinstance(module, nn.MultiheadAttention):
+                # Native PyTorch MHA doesn't expose weights directly - need custom hook
+                # Fallback: Check if module has cached attention (some implementations store it)
+                if hasattr(module, '_last_attn_weights') and module._last_attn_weights is not None:
+                    return module._last_attn_weights.detach().cpu().numpy()
+            
+            # Case 3: Vision Transformers (ViT) - common patterns
+            if hasattr(module, 'attn') and hasattr(module.attn, 'get_attention_map'):
+                return module.attn.get_attention_map().detach().cpu().numpy()
+            
+            # Case 4: Custom attention implementations (e.g., timm models)
+            if hasattr(module, 'attention_weights'):
+                attn = getattr(module, 'attention_weights')
+                if isinstance(attn, torch.Tensor):
+                    return attn.detach().cpu().numpy()
+                    
+        except Exception as e:
+            logger.debug(f"Attention extraction failed for {self.layer_name}: {e}")
+        
+        return None  # No attention weights available for this layer type
     
     def _forward_hook(self, module: nn.Module, input: Any, output: Any) -> None:
         """CRITICAL: Generate schema-compliant log IMMEDIATELY (no deferred conversion)."""
@@ -113,6 +226,14 @@ class PyTorchHook:
                 },
                 "event_type": "forward"
             }
+
+            # === CRITICAL GAP 1 FIX: Extract attention weights ===
+            attn_weights = self._extract_attention_weights(module, output)
+            if attn_weights is not None and attn_weights.size > 0:
+                # Store raw tensor for deferred sparse filtering (off critical path)
+                log_entry["_raw_attention"] = attn_weights  # Mark for sparse processing in collect_logs()
+                logger.debug(f"Captured attention weights shape {attn_weights.shape} for {self.layer_name}")
+            # ================================================
             
             # Defer heavy processing: store raw tensor for sparse filtering in collect_logs()
             if isinstance(output, torch.Tensor):
@@ -221,7 +342,33 @@ class PyTorchHook:
                         "threshold_applied": self._sparse_threshold,
                         "sparse_type": "filtering_failed"
                     }]
-            
+
+            # === CRITICAL GAP 1 FIX: Process attention weights ===
+            raw_attn = log.pop("_raw_attention", None)
+            if raw_attn is not None:
+                try:
+                    # Apply sparse filtering (reuses existing _sparse_filter method)
+                    sparse_result = self._sparse_filter(
+                        torch.from_numpy(raw_attn) if isinstance(raw_attn, np.ndarray) else raw_attn,
+                        is_attention=True
+                    )
+                    # Store sparse representation in attention_weights field
+                    log["internal_states"]["attention_weights"] = sparse_result.get("sparse_values", [])
+                    
+                    # Update metadata to reflect per-head preservation
+                    if "sparse_logging_metadata" not in log:
+                        log["sparse_logging_metadata"] = {}
+                    log["sparse_logging_metadata"].update({
+                        "attention_shape": sparse_result.get("shape", []),
+                        "attention_sparse_type": "per_head_top_k",  # ← Explicit type
+                        "top_k_per_head": self.config.get("sparse_logging", {}).get("top_k_per_head", 3),
+                        "attention_threshold": sparse_result.get("threshold_applied", 0.1)
+                    })
+                        
+                except Exception as e:
+                    logger.debug(f"Sparse filtering failed for attention: {e}")
+                    log["internal_states"]["attention_weights"] = []
+            # ================================================
             processed_logs.append(log)
         
         self._logs.clear()
@@ -334,6 +481,35 @@ class PyTorchLoggingEngine:
             hooks_attached += 1
             layer_index += 1
         
+ 
+        # === CRITICAL ADDITION: Transformer attention submodules ===
+        model_type_lower = self._model_metadata["model_type"].lower()
+        if any(kw in model_type_lower for kw in ["bert", "transformer", "roberta", "distilbert", "clip"]):
+            for name, module in model.named_modules():
+                class_name = module.__class__.__name__
+                # Detect attention submodules by class name patterns
+                if any(pattern in class_name for pattern in [
+                    'SelfAttention',    # BERT/RoBERTa
+                    'SdpaAttention',    # Newer HF models
+                    'MultiHeadAttention',  # Some implementations
+                    'Attention'         # Generic (CLIP, ViT) - use cautiously
+                ]):
+                    # Verify it's a real attention module (not false positive)
+                    if hasattr(module, 'query') and hasattr(module, 'key'):
+                        hook = PyTorchHook(
+                            layer_name=name,
+                            layer_index=layer_index,
+                            config=self.config,
+                            model_metadata=self._model_metadata
+                        )
+                        hook.attach(module)
+                        self.hooks.append(hook)
+                        hooks_attached += 1
+                        layer_index += 1
+                        logger.debug(f"Attached hook to attention submodule: {name} ({class_name})")
+        # ================================================
+
+
         self._enabled = True
         logger.info(
             f"Enabled M-TRACE for {hooks_attached} layers ({self._model_metadata['model_type']}) | "
@@ -351,15 +527,44 @@ class PyTorchLoggingEngine:
         logger.info("Disabled M-TRACE logging")
     
     def collect_logs(self) -> List[Dict]:
-        """Collect logs with sparse filtering already applied (schema-compliant)."""
+        """Collect logs with sparse filtering already applied + guaranteed EXECUTION ORDER."""
         if not self._enabled:
             return []
         
         all_logs = []
         for hook in self.hooks:
-            all_logs.extend(hook.get_logs())  # Returns schema-compliant logs
+            all_logs.extend(hook.get_logs())
         
-        return all_logs
+        if not all_logs:
+            return all_logs
+        
+        # === CRITICAL GAP 2 FIX: Sort by EXECUTION TIMESTAMP (primary) + layer_index (secondary) ===
+        def _sort_key(log: Dict) -> tuple:
+            """Sort by actual execution time (timestamp), NOT attachment order (layer_index)."""
+            metadata = log.get("model_metadata", {})
+            internal = log.get("internal_states", {})
+            
+            # PRIMARY: timestamp (execution order - when hook actually fired)
+            timestamp = metadata.get("timestamp", 0)
+            if not isinstance(timestamp, (int, float)):
+                timestamp = 0
+            
+            # SECONDARY: layer_index (for tie-breaking within same millisecond)
+            layer_idx = internal.get("layer_index", -1)
+            if not isinstance(layer_idx, (int, float)):
+                layer_idx = -1
+            
+            return (int(timestamp), int(layer_idx))  # ← TIMESTAMP FIRST!
+        # ==============================================================================
+        
+        sorted_logs = sorted(all_logs, key=_sort_key)
+        
+        logger.debug(
+            f"Sorted {len(all_logs)} logs by EXECUTION ORDER (timestamp range: "
+            f"{sorted_logs[0].get('model_metadata', {}).get('timestamp', 'N/A')} → "
+            f"{sorted_logs[-1].get('model_metadata', {}).get('timestamp', 'N/A')})"
+        )
+        return sorted_logs
     
     def is_enabled(self) -> bool:
         return self._enabled
