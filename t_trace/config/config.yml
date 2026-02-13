@@ -9,9 +9,10 @@ logging:
 
 # ===== SPARSE LOGGING (Section 3.1.4) =====
 sparse_logging:
-  enabled: false
+  enabled: true
   sparse_threshold: 0.1        # Log only values with abs(value) > threshold
   top_k_values: 5              # Always log top-k values even if below threshold
+  top_K_per_head: 3         # For multi-head attention, log top-K per head
   quantization:
     enabled: false             # Optional lossy quantization (separate from compression)
     precision: "8-bit"         # Options: "8-bit", "16-bit"
