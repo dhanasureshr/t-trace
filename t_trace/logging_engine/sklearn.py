@@ -231,6 +231,66 @@ class SklearnLoggingEngine:
         
         self._logs.append(log_entry)
         logger.debug(f"Logged fit state for {model.__class__.__name__}")
+
+    # --- ADD THIS METHOD TO SklearnLoggingEngine CLASS ---
+
+    def _extract_decision_path(self, model, sample_x: np.ndarray) -> list:
+        """
+        Manually traverse the forest to record the exact decision path for a single sample.
+        RETURNS: List of STRINGS (schema-compliant) e.g., ["Tree[0]:Node[0]->age(<=29.5):Right", ...]
+        """
+        path_strings = []
+        
+        # Handle Ensemble models (RandomForest, GradientBoosting)
+        if hasattr(model, 'estimators_'):
+            estimators = model.estimators_
+        else:
+            # Single tree
+            estimators = [model]
+
+        for tree_idx, estimator in enumerate(estimators):
+            if not hasattr(estimator, 'tree_'):
+                continue
+                
+            tree = estimator.tree_
+            node_id = 0
+            
+            # Traverse until we hit a leaf
+            while node_id != -1:
+                feature_idx = tree.feature[node_id]
+                threshold = tree.threshold[node_id]
+                
+                # Get feature name if available
+                feature_name = str(feature_idx)
+                if hasattr(model, 'feature_names_in_') and 0 <= feature_idx < len(model.feature_names_in_):
+                    try:
+                        feature_name = model.feature_names_in_[feature_idx]
+                    except (IndexError, AttributeError):
+                        pass
+                
+                # Check split condition
+                sample_val = sample_x[feature_idx] if 0 <= feature_idx < len(sample_x) else 0.0
+                
+                if sample_val <= threshold:
+                    next_node = tree.children_left[node_id]
+                    direction = "Left"
+                else:
+                    next_node = tree.children_right[node_id]
+                    direction = "Right"
+                
+                # === CRITICAL FIX: Format as STRING for Parquet Schema ===
+                # Format: "Tree[T]:Node[N]->Feature(<=Thresh):Dir"
+                step_str = f"Tree[{tree_idx}]:Node[{node_id}]->{feature_name}(<= {threshold:.2f}):{direction}"
+                path_strings.append(step_str)
+                # =======================================================
+                
+                # Move to next node
+                if next_node == -1:
+                    break 
+                node_id = next_node
+                
+        return path_strings
+    
     
     def _log_prediction(
         self, 
@@ -239,10 +299,24 @@ class SklearnLoggingEngine:
         predictions: np.ndarray, 
         decision_info: Optional[Any] = None
     ) -> None:
-        """Log prediction with M-TRACE schema compliance."""
+        """Log prediction with M-TRACE schema compliance and Decision Path extraction."""
         timestamp_ms = int(time.time() * 1000)
         
-        # Build schema-compliant log entry (CRITICAL FIX)
+        # 1. Extract Decision Paths (CRITICAL ADDITION)
+        # We extract paths for the first sample in the batch to minimize overhead in production mode.
+        # For development mode, you could loop through all X if needed, but usually one representative path is enough for validation.
+        extracted_paths = []
+        if X.shape[0] > 0:
+            try:
+                # Call your newly added _extract_decision_path method
+                # Pass the model and the first sample (X[0])
+                extracted_paths = self._extract_decision_path(model, X[0])
+                logger.debug(f"Extracted decision path with {len(extracted_paths)} steps for sample 0")
+            except Exception as e:
+                logger.warning(f"Failed to extract decision path: {e}")
+                extracted_paths = [] # Fallback to empty list on error
+
+        # 2. Build schema-compliant log entry
         log_entry = {
             "model_metadata": {
                 **self._base_model_metadata,
@@ -251,7 +325,7 @@ class SklearnLoggingEngine:
                 "mode": self._mode,
                 "hyperparameters": {
                     "learning_rate": 0.001,
-                    "batch_size": X.shape[0],
+                    "batch_size": int(X.shape[0]), # Ensure int for schema
                     "optimizer": "n/a",
                     "other_params": {}
                 },
@@ -270,13 +344,14 @@ class SklearnLoggingEngine:
                 "gradients": [],
                 "losses": 0.0,                            # ← REQUIRED FIELD
                 "feature_importance": [],
-                "decision_paths": [],
+                # 3. Populate with extracted data instead of empty list
+                "decision_paths": extracted_paths,        
                 "output_activations": []
             },
             "event_type": "predict" if hasattr(model, 'predict') else "transform"
         }
         
-        # Add prediction-specific details
+        # Add prediction-specific details (proba, distances)
         try:
             if hasattr(model, 'predict_proba'):
                 try:
@@ -296,7 +371,7 @@ class SklearnLoggingEngine:
             logger.warning(f"Error capturing prediction details: {e}")
         
         self._logs.append(log_entry)
-        logger.debug(f"Logged prediction for {model.__class__.__name__}")
+        logger.debug(f"Logged prediction for {model.__class__.__name__} with {len(extracted_paths)} path steps")
     
     def _create_wrapped_estimator_class(self, base_class: type) -> type:
         """Dynamically create wrapped estimator with schema-compliant logging."""
