@@ -141,31 +141,70 @@ class LocalParquetStorage(StorageEngine):
         Prepare log entry for storage:
         1. Apply sparse filtering to large tensors
         2. Compress binary fields
-        3. Add compression/sparse metadata
+        3. Add compression/sparse metadata (GUARANTEED NON-NULL)
         """
         prepared = log_entry.copy()
         
+        # Initialize metadata dict immediately to ensure it exists
+        if "sparse_logging_metadata" not in prepared:
+            prepared["sparse_logging_metadata"] = {}
+            
+        meta = prepared["sparse_logging_metadata"]
+        sparse_filter_applied = False
+
         # Apply sparse logging to tensor fields if enabled
         if sparse_config.get("enabled", True):
             for field in ["attention_weights", "feature_maps", "gradients", "layer_activations"]:
                 if field in prepared.get("internal_states", {}):
                     tensor_data = prepared["internal_states"][field]
+                    
+                    # Apply filtering
                     sparse_result = apply_sparse_filtering(tensor_data, {"sparse_logging": sparse_config})
                     
-                    # Replace full tensor with sparse values only
-                    prepared["internal_states"][field] = sparse_result.get("sparse_values", tensor_data)
+                    # Replace full tensor with sparse values only (Schema expects list[float])
+                    prepared["internal_states"][field] = sparse_result.get("sparse_values", [])
                     
-                    # Add sparse metadata (CORRECTED: scalar values only)
-                    if "sparse_logging_metadata" not in prepared:
-                        sparse_indices = sparse_result.get("sparse_indices", [])
-                        prepared["sparse_logging_metadata"] = {
-                            "threshold_applied": float(sparse_result.get("threshold_applied", 0.0)),
-                            "top_k_values_logged": int(sparse_result.get("top_k_values_logged", len(sparse_indices))),  # ← INTEGER COUNT
-                            "original_tensor_shape": [int(x) for x in sparse_result.get("shape", [])],  # ← List of ints
-                            "sparse_indices_count": int(len(sparse_indices)),  # ← INTEGER COUNT
-                            "sparse_type": str(sparse_result.get("sparse_type", "threshold")),
-                            "sparse_indices": [int(x) for x in sparse_indices]  # ← NEW: Actual indices list
-                        }
+                    # Update metadata with actual results
+                    sparse_indices = sparse_result.get("sparse_indices", [])
+                    meta.update({
+                        "threshold_applied": float(sparse_result.get("threshold_applied", 0.0)),
+                        "top_k_values_logged": int(len(sparse_indices)),
+                        "original_tensor_shape": [int(x) for x in sparse_result.get("shape", [])],
+                        "sparse_indices_count": int(len(sparse_indices)),
+                        "sparse_type": str(sparse_result.get("sparse_type", "none")),
+                        "sparse_indices": [int(x) for x in sparse_indices]
+                    })
+                    sparse_filter_applied = True
+                    # Break if you only expect one sparse field per log, otherwise remove break to handle multiple
+                    # break 
+
+        # === CRITICAL FIX: Enforce Defaults if No Sparse Filtering Occurred ===
+        # This prevents "Column contains nulls" errors for layers like Embeddings or Poolers
+        if not sparse_filter_applied:
+            meta.update({
+                "threshold_applied": 0.0,
+                "top_k_values_logged": 0,
+                "original_tensor_shape": [],
+                "sparse_indices_count": 0,
+                "sparse_type": "none",
+                "sparse_indices": []
+            })
+        
+        # Final Safety Check: Ensure NO None values remain in metadata
+        # (Defense in depth against unexpected None returns from helper functions)
+        defaults = {
+            "threshold_applied": 0.0,
+            "top_k_values_logged": 0,
+            "original_tensor_shape": [],
+            "sparse_indices_count": 0,
+            "sparse_type": "none",
+            "sparse_indices": []
+        }
+        for key, default_val in defaults.items():
+            if meta.get(key) is None:
+                meta[key] = default_val
+
+        prepared["sparse_logging_metadata"] = meta
                 
         # Compress large binary fields
         compression_fields = ["input_data", "output_data"]
@@ -247,6 +286,28 @@ class LocalParquetStorage(StorageEngine):
         filename = self._generate_filename(run_id, model_type, mode)
         mode_dir = "development" if mode == "development" else "production"
         filepath = self.storage_dir / mode_dir / filename
+
+        # Inside save_logs, just before 'table = pa.Table.from_pylist(...)'
+
+        # Sanitize metadata for ALL logs
+        for log in prepared_logs:
+            if "sparse_logging_metadata" in log and isinstance(log["sparse_logging_metadata"], dict):
+                meta = log["sparse_logging_metadata"]
+                # Force defaults for any missing keys
+                meta.setdefault("threshold_applied", 0.0)
+                meta.setdefault("top_k_values_logged", 0)
+                meta.setdefault("original_tensor_shape", [])
+                meta.setdefault("sparse_indices_count", 0)
+                meta.setdefault("sparse_type", "none")
+                meta.setdefault("sparse_indices", [])
+                
+                # Explicitly clear None values
+                for k in list(meta.keys()):
+                    if meta[k] is None:
+                        if k in ["threshold_applied"]: meta[k] = 0.0
+                        elif k in ["top_k_values_logged", "sparse_indices_count"]: meta[k] = 0
+                        elif k in ["original_tensor_shape", "sparse_indices"]: meta[k] = []
+                        else: meta[k] = "none"
         
         try:
             # Convert to PyArrow Table

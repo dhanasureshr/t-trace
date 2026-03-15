@@ -332,7 +332,28 @@ class PyTorchHook:
             if raw_grad is not None and isinstance(raw_grad, torch.Tensor):
                 try:
                     sparse_result = self._sparse_filter(raw_grad)
-                    log["internal_states"]["gradients"] = [sparse_result]  # List per schema
+                    # FIX 1: Extract ONLY the values list for the 'gradients' field
+                    # The schema expects pa.list_(pa.float32()), not a dict
+                    grad_values = sparse_result.get("sparse_values", [])
+                    # Ensure it's a flat list of floats (PyArrow requirement)
+                    if isinstance(grad_values, np.ndarray):
+                        grad_values = grad_values.tolist()
+                    log["internal_states"]["gradients"] = grad_values
+
+                    # FIX 2: Store the complex metadata in the dedicated metadata field
+
+                    if "sparse_logging_metadata" not in log:
+                        log["sparse_logging_metadata"] = {}
+
+                    log["sparse_logging_metadata"].update({
+                        "gradient_shape": sparse_result.get("shape", []),
+                        "gradient_sparse_type": sparse_result.get("sparse_type", "threshold"),
+                        "gradient_threshold": sparse_result.get("threshold_applied", 0.1),
+                        "gradient_indices_count": len(sparse_result.get("sparse_indices", []))
+                        # Note: We don't store the full indices list in metadata to save space, 
+                        # unless your schema explicitly supports a list of ints there.
+                    })
+
                 except Exception as e:
                     logger.debug(f"Sparse filtering failed for gradient: {e}")
                     log["internal_states"]["gradients"] = [{
