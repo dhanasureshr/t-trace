@@ -1,0 +1,60 @@
+This is a crucial strategic move for your publication. Reviewers at venues like FAccT or NeurIPS will immediately ask: “Where does this fail?” or “Is this just a hammer looking for a nail?”
+
+By proactively designing an experiment to define the boundary conditions where M-TRACE offers no advantage over post-hoc tools, you transform your paper from a “tool promotion” into a rigorous scientific analysis. This demonstrates intellectual honesty and deepens the trust in your positive results.
+
+Here is the experimental plan for Phase 2, Experiment 5: Boundary Condition Analysis (The “Null Hypothesis” Validation).
+Phase 2, Experiment 5: Defining the Limits of Temporal Trajectory
+
+Title: When History Doesn’t Matter: Identifying Scenarios Where Post-Hoc Approximations Suffice.
+1. Scientific Hypothesis
+
+Hypothesis: M-TRACE’s temporal trajectory provides significant interpretability gains only when the model’s decision-making process involves sequential reasoning, state evolution, or mid-computation error correction.
+Null Hypothesis ($H_0$): In tasks where the decision is determined by a static, global aggregation of features (e.g., simple linear separability or shallow decision boundaries) without intermediate logical steps, M-TRACE’s temporal data adds zero value over standard post-hoc attribution (SHAP/LIME). In these cases, the “when” is irrelevant; only the “what” (final feature importance) matters.
+2. Experimental Design
+A. Task Selection: The “Static Aggregation” Control Group
+
+We need tasks where the model acts as a function approximator rather than a reasoning engine.
+
+| Task Type | Dataset | Model Architecture | Why Temporal Data Should Fail |
+| :— | :— | :— | : |
+| Simple Tabular Classification | UCI Credit Card / Adult Income | Shallow MLP (2 layers) or Logistic Regression | Decision is a weighted sum. No intermediate “thought” steps exist between input and output. |
+| Texture Classification | Describable Textures Dataset (DTD) | ResNet-18 (Pre-trained, frozen backbone + linear head) | Classification relies on global texture statistics, not object part localization or sequential reasoning. |
+| Keyword Spotting | Google Speech Commands (v2) - 12 classes | Simple CNN (1D) | Decision based on spectral energy presence, not linguistic syntax or temporal sequence logic. |
+B. Baseline Comparison
+
+    M-TRACE: Captures layer-by-layer activations.
+    SHAP (Kernel/Deep): Computes feature attribution on the final output.
+    Metric: Interpretability Utility Score (Human evaluation time + Accuracy of debugging).
+
+C. The “Failure” Metric: The Temporal Redundancy Index (TRI)
+
+We will quantify how useless the temporal data is using a new metric:
+$$ TRI = 1 - \frac{I(M_{trace}) - I(SHAP)}{Cost(M_{trace})} $$
+Where:
+
+    $I(Model)$ = Information Gain (accuracy of human diagnosis).
+    $Cost$ = Cognitive load (time to analyze) + Computational overhead.
+    Goal: We expect $TRI \approx 0$ or negative (meaning M-TRACE is strictly worse due to overhead) for these static tasks.
+
+3. Execution Protocol
+Step 1: Inject “Obvious” Errors
+
+Instead of subtle reasoning errors, we inject data quality issues that are visible in the input space but do not require temporal tracing to find.
+
+    Scenario A: Spurious correlation in input pixels (e.g., all “Cat” images have a specific watermark in the corner).
+    Scenario B: Label noise (random 10% of labels flipped).
+    Scenario C: Feature scaling error (one feature scaled by 100x).
+
+Step 2: The Debugging Race
+
+Recruit 5-10 ML practitioners (or simulate via strict protocol if humans aren’t available) to diagnose the error.
+
+    Group A (M-TRACE): Given access to the full temporal dashboard (heatmaps, layer evolution).
+    Group B (SHAP): Given standard SHAP summary plots and dependence plots.
+    Task: “Identify the root cause of the model’s poor performance.”
+
+Step 3: Expected Outcome (The “Win” for the Null Hypothesis)
+
+    Result: Group B (SHAP) should identify the spurious watermark or scaling error faster than Group A.
+    Reasoning: Looking at 20 layers of activation maps for a simple watermark detection is noise. A single SHAP plot highlighting the corner pixel is sufficient.
+    Conclusion: “For static feature correlations, temporal granularity introduces cognitive overload without adding diagnostic precision.”
