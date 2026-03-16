@@ -1,0 +1,20 @@
+{
+  "experiment": "Phase 2 - Experiment 4: Cross-Modal Fusion Mechanism Capture",
+  "total_cases": 50,
+  "successful_captures": 50,
+  "capture_rate_pct": 100.0,
+  "fusion_insight_score": 1.0,
+  "average_inference_time_ms": 14.22,
+  "top_captured_layers": [
+    {
+      "layer": "CLIPAttention",
+      "count": 50
+    }
+  ],
+  "baseline_comparison": {
+    "method": "LIME",
+    "theoretical_capture_rate": 0.0,
+    "reason": "Post-hoc tools cannot access intermediate temporal states."
+  },
+  "conclusion": "SUCCESS"
+}
