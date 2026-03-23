@@ -173,3 +173,33 @@ cython_debug/
 
 experiments/**/results/*
 !experiments/**/results/.gitkeep
+
+# ===== ARTIFACT DIRECTORY (Reproducibility Package) =====
+# Track: Code, configs, Dockerfile, requirements
+# Ignore: Generated results, logs, caches
+
+# Generated experiment outputs (reviewers regenerate these)
+artifact/results/raw/*
+artifact/results/processed/*
+artifact/results/figures/*
+!artifact/results/.gitkeep  # Keep directory structure
+
+# Runtime logs
+artifact/mtrace_logs/
+artifact/*.log
+
+# Python cache in artifact/
+artifact/**/__pycache__/
+artifact/**/*.pyc
+
+# Docker build artifacts
+artifact/docker/.build-cache/
+artifact/*.dockerignore
+
+# IDE/editor files in artifact/
+artifact/.vscode/
+artifact/.idea/
+artifact/*.swp
+artifact/*.swo
+
+# Keep everything else in artifact/ tracked by default
