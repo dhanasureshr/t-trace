@@ -1,0 +1,168 @@
+{
+  "seed": 123,
+  "timestamp": "2026-03-23T13:31:35.831982",
+  "metrics": {
+    "mtrace_causality_score": 0.2899889281815772,
+    "captum_causality_score": 0.32,
+    "training_time_sec": 90.93099567800164,
+    "overhead_percentage": 17.647058823529406,
+    "active_layers_analyzed": 12
+  },
+  "additional_metrics": {
+    "run_id": "6f71afc7-65d3-470a-9f3a-59f423082ede",
+    "mtrace_details": {
+      "method": "M-TRACE (Attention-Filtered)",
+      "global_causality_score": 0.2899889281815772,
+      "temporal_alignment": true,
+      "attention_threshold": 0.01,
+      "total_layers": 89,
+      "active_layers_count": 12,
+      "removed_noise_layers": 0,
+      "layers_analyzed": 12,
+      "top_layer_index": 87,
+      "top_layer_correlation": 0.505611949347233,
+      "layer_details": [
+        {
+          "layer_index": 77,
+          "correlation": 0.3343719047358144,
+          "samples": 32,
+          "mean_attn": 8.170042037963867,
+          "mean_grad": 0.0018157935701310635
+        },
+        {
+          "layer_index": 78,
+          "correlation": 0.0694279115477594,
+          "samples": 32,
+          "mean_attn": 8.268922805786133,
+          "mean_grad": 0.001930970698595047
+        },
+        {
+          "layer_index": 79,
+          "correlation": 0.10307385192531276,
+          "samples": 32,
+          "mean_attn": 9.198707580566406,
+          "mean_grad": 0.0015195354353636503
+        },
+        {
+          "layer_index": 80,
+          "correlation": 0.31915411052094544,
+          "samples": 32,
+          "mean_attn": 8.680313110351562,
+          "mean_grad": 0.0017365041421726346
+        },
+        {
+          "layer_index": 81,
+          "correlation": 0.15092992198247346,
+          "samples": 32,
+          "mean_attn": 9.671987533569336,
+          "mean_grad": 0.0021134379785507917
+        },
+        {
+          "layer_index": 82,
+          "correlation": 0.23675454417950992,
+          "samples": 32,
+          "mean_attn": 10.755281448364258,
+          "mean_grad": 0.0022905603982508183
+        },
+        {
+          "layer_index": 83,
+          "correlation": 0.37742273116860175,
+          "samples": 32,
+          "mean_attn": 10.353608131408691,
+          "mean_grad": 0.002295025158673525
+        },
+        {
+          "layer_index": 84,
+          "correlation": 0.34105763959548235,
+          "samples": 32,
+          "mean_attn": 10.09360408782959,
+          "mean_grad": 0.002321896841749549
+        },
+        {
+          "layer_index": 85,
+          "correlation": 0.36162095335708083,
+          "samples": 32,
+          "mean_attn": 9.817534446716309,
+          "mean_grad": 0.0042656417936086655
+        },
+        {
+          "layer_index": 86,
+          "correlation": 0.36260455057890867,
+          "samples": 32,
+          "mean_attn": 8.750636100769043,
+          "mean_grad": 0.004665650427341461
+        },
+        {
+          "layer_index": 87,
+          "correlation": 0.505611949347233,
+          "samples": 32,
+          "mean_attn": 8.589473724365234,
+          "mean_grad": 0.0036453288048505783
+        },
+        {
+          "layer_index": 88,
+          "correlation": 0.3178370692398039,
+          "samples": 32,
+          "mean_attn": 9.149173736572266,
+          "mean_grad": 0.00478892307728529
+        }
+      ],
+      "all_layer_stats": [
+        {
+          "layer_index": 77,
+          "mean_attention": 0.2874031662940979
+        },
+        {
+          "layer_index": 78,
+          "mean_attention": 0.2921687364578247
+        },
+        {
+          "layer_index": 79,
+          "mean_attention": 0.3450760543346405
+        },
+        {
+          "layer_index": 80,
+          "mean_attention": 0.34578925371170044
+        },
+        {
+          "layer_index": 81,
+          "mean_attention": 0.3999299108982086
+        },
+        {
+          "layer_index": 82,
+          "mean_attention": 0.5130848288536072
+        },
+        {
+          "layer_index": 83,
+          "mean_attention": 0.47925886511802673
+        },
+        {
+          "layer_index": 84,
+          "mean_attention": 0.44956910610198975
+        },
+        {
+          "layer_index": 85,
+          "mean_attention": 0.41578248143196106
+        },
+        {
+          "layer_index": 86,
+          "mean_attention": 0.3416176438331604
+        },
+        {
+          "layer_index": 87,
+          "mean_attention": 0.3242722451686859
+        },
+        {
+          "layer_index": 88,
+          "mean_attention": 0.35882246494293213
+        }
+      ]
+    },
+    "captum_details": {
+      "method": "Captum (IG + Rollout)",
+      "global_causality_score": 0.32,
+      "temporal_alignment": false,
+      "note": "Post-hoc approximation; cannot access exact simultaneous states."
+    }
+  }
+}
