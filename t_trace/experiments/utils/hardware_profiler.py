@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Hardware profiler optimized for Adari Workstation (RTX 4080 Super + Ryzen 9 7900X)
+Hardware profiler optimized for Evaluation Workstation" (RTX 4080 Super + Ryzen 9 7900X)
 Validates environment readiness for M-TRACE Phase 1 experiments.
 """
 import sys
@@ -112,7 +112,7 @@ def profile_workstation():
     """Comprehensive hardware profile for M-TRACE validation"""
     return {
         "system": {
-            "hostname": platform.node(),
+            "hostname": "Evaluation Workstation",
             "os": f"{platform.system()} {platform.release()}",
             "kernel": platform.version(),
             "python_version": platform.python_version()
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     profile = profile_workstation()
     
     print("=" * 70)
-    print("M-TRACE HARDWARE PROFILER - Adari Workstation Validation")
+    print("M-TRACE HARDWARE PROFILER - Evaluation Workstation Validation")
     print("=" * 70)
     print(json.dumps(profile, indent=2))
     print("=" * 70)

@@ -1,8 +1,8 @@
 {
   "system": {
-    "hostname": "AdariWorkstation",
-    "os": "Linux 6.17.0-14-generic",
-    "kernel": "#14~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Jan 15 15:52:10 UTC 2",
+    "hostname": "Evaluation Workstation",
+    "os": "Linux 6.17.0-19-generic",
+    "kernel": "#19~24.04.2-Ubuntu SMP PREEMPT_DYNAMIC Fri Mar  6 23:08:46 UTC 2",
     "python_version": "3.12.3"
   },
   "gpu": {
