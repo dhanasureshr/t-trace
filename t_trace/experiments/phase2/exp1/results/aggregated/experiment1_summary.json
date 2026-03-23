@@ -25,7 +25,7 @@
   },
   "significance": {
     "test": "Welch's t-test (unequal variances)",
-    "t_statistic": Infinity,
+    "t_statistic": "Infinity",
     "p_value": 0.0,
     "significant": true,
     "cohens_d": 0.0,
