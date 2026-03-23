@@ -93,6 +93,12 @@ def generate_trajectory_plot(stats: StatisticalRigor):
                    textcoords='offset points', ha='center', fontsize=11,
                    fontweight='bold', color=color_mtrace)
     
+    ax.plot(step_indices, mtrace_detections, 
+        c=color_mtrace, 
+        linestyle='--', 
+        linewidth=2, 
+        alpha=0.6)
+    
     # SHAP limitation (flat line)
     shap_y_pos = 0.5
     ax.hlines(shap_y_pos, -0.5, len(steps) - 0.5, colors=color_shap,
