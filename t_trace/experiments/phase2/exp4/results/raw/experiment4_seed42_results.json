@@ -1,0 +1,25 @@
+{
+  "seed": 42,
+  "timestamp": "2026-03-23T15:56:32.086957",
+  "metrics": {
+    "mtrace_capture_rate": 1.0,
+    "fusion_insight_score": 1.0,
+    "lime_baseline": 0.0,
+    "avg_inference_time_ms": 15.537047386169434,
+    "total_cases": 50,
+    "successful_captures": 50
+  },
+  "additional_metrics": {
+    "top_captured_layers": [
+      {
+        "layer": "CLIPAttention",
+        "count": 50
+      }
+    ],
+    "case_results_summary": {
+      "total": 50,
+      "successful": 50,
+      "failed": 0
+    }
+  }
+}

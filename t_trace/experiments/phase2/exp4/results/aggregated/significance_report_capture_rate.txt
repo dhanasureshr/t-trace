@@ -1,0 +1,19 @@
+
+============================================================
+STATISTICAL SIGNIFICANCE REPORT: capture_rate
+============================================================
+M-TRACE: 1.000 (std=0.000) 
+LIME:    0.000 (std=0.000) 
+------------------------------------------------------------
+Welch's t-test Results (one-sided):
+  t(8) = inf
+  p-value = 0.0000e+00
+  Significant (p<0.05): ✅ YES
+  Effect Size (Cohen's d): 0.000 (negligible)
+============================================================
+
+INTERPRETATION:
+  M-TRACE captures cross-modal fusion mechanisms during inference
+  LIME explains modalities separately (no interaction mechanism)
+  Key contribution: Fusion insight, not feature importance
+============================================================
