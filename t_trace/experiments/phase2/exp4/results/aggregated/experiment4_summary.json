@@ -1,0 +1,41 @@
+{
+  "experiment": "Phase 2 Experiment 4: Cross-Modal Fusion Mechanism Capture",
+  "n_seeds": 5,
+  "seeds_used": [
+    42,
+    123,
+    456,
+    789,
+    1011
+  ],
+  "mtrace_capture_rate": {
+    "mean": 1.0,
+    "std": 0.0,
+    "report": "1.000 (std=0.000)"
+  },
+  "fusion_insight_score": {
+    "mean": 1.0,
+    "std": 0.0,
+    "report": "1.000 (std=0.000)"
+  },
+  "lime_baseline": {
+    "mean": 0.0,
+    "std": 0.0,
+    "report": "0.000 (std=0.000)",
+    "note": "LIME explains modalities separately (no fusion mechanism access)"
+  },
+  "inference_time_ms": {
+    "mean": 14.10820484161377,
+    "std": 0.8030539314896965,
+    "report": "14.108 \u00b1 0.803 ms"
+  },
+  "significance": {
+    "test": "Welch's t-test (one-sided, unequal variances)",
+    "t_statistic": Infinity,
+    "p_value": 0.0,
+    "significant": true,
+    "cohens_d": 0.0,
+    "effect_magnitude": "negligible"
+  },
+  "key_insight": "M-TRACE captures cross-modal fusion mechanisms during inference; LIME cannot access temporal fusion states"
+}

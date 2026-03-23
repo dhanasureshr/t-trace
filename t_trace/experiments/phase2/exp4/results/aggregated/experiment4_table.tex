@@ -1,0 +1,24 @@
+
+\begin{table}[h]
+\centering
+\caption{Phase 2 Experiment 4: Cross-Modal Fusion Mechanism Capture (5 Random Seeds)}
+\label{tab:experiment4_fusion}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{M-TRACE} & \textbf{LIME} & \textbf{p-value} \\
+\midrule
+Capture Rate & $1.000 \pm 0.000$ & $0.000 \pm 0.000$ & $0.00e+00$ \\
+\midrule
+Fusion Insight Score & $1.000 \pm 0.000$ & N/A & N/A \\
+\midrule
+Inference Time (ms) & $14.11 \pm 0.80$ & N/A & N/A \\
+\bottomrule
+\end{tabular}
+\begin{flushleft}
+\small
+\textit{Note:} LIME explains modalities separately (no fusion mechanism access).
+Capture Rate = \% cases where attention data captured during cross-modal fusion.
+Statistical significance assessed via Welch's t-test (one-sided, p<0.05). Effect size: Cohen's d.
+n=5 random seeds (42, 123, 456, 789, 1011), 50 cases per seed.
+\end{flushleft}
+\end{table}

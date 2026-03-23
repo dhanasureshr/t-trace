@@ -1,0 +1,5 @@
+metric,mean,std,n_seeds
+M-TRACE Capture Rate,1.0,0.0,5
+Fusion Insight Score,1.0,0.0,5
+LIME Baseline,0.0,0.0,5
+Inference Time (ms),14.10820484161377,0.8030539314896965,5
