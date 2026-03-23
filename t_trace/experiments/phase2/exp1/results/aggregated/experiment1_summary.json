@@ -1,0 +1,35 @@
+{
+  "experiment": "Phase 2 Experiment 1: Temporal Fidelity",
+  "n_seeds": 5,
+  "seeds_used": [
+    42,
+    123,
+    456,
+    789,
+    1011
+  ],
+  "mtrace_temporal_precision": {
+    "mean": 1.0,
+    "std": 0.0,
+    "report": "1.000 \u00b1 0.000"
+  },
+  "overhead_ms": {
+    "mean": 1.0109360799469869,
+    "std": 0.03180345639909497,
+    "report": "1.01 \u00b1 0.03 ms"
+  },
+  "overhead_percentage": {
+    "mean": 13.636363636363635,
+    "std": 2.808666774861361e-15,
+    "report": "13.64 \u00b1 0.00 %"
+  },
+  "significance": {
+    "test": "Welch's t-test (unequal variances)",
+    "t_statistic": Infinity,
+    "p_value": 0.0,
+    "significant": true,
+    "cohens_d": 0.0,
+    "effect_magnitude": "small"
+  },
+  "shap_baseline_note": "SHAP cannot compute temporal precision (structurally impossible - operates post-hoc)"
+}
