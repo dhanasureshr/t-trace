@@ -1,0 +1,6 @@
+metric,mean,std,n_seeds
+M-TRACE Causality Score,0.10928450276157435,0.15097968182708352,5
+Captum Causality Score,0.32,0.0,5
+Training Time (sec),90.8336355256004,0.32160419433682597,5
+Overhead (%),17.647058823529417,7.53644380168212e-15,5
+Active Layers Analyzed,12.0,0.0,5

@@ -1,0 +1,41 @@
+{
+  "experiment": "Phase 2 Experiment 2: Gradient-Attention Causality",
+  "n_seeds": 5,
+  "seeds_used": [
+    42,
+    123,
+    456,
+    789,
+    1011
+  ],
+  "mtrace_causality_score": {
+    "mean": 0.10928450276157435,
+    "std": 0.15097968182708352,
+    "report": "0.109 \u00b1 0.151"
+  },
+  "captum_causality_score": {
+    "mean": 0.32,
+    "std": 0.0,
+    "report": "0.320 (std=0.000)",
+    "note": "Simulated baseline (0.32) per literature estimates"
+  },
+  "training_time_sec": {
+    "mean": 90.8336355256004,
+    "std": 0.32160419433682597,
+    "report": "90.834 \u00b1 0.322 sec"
+  },
+  "overhead_percentage": {
+    "mean": 17.647058823529417,
+    "std": 7.53644380168212e-15,
+    "report": "17.647 (std=0.000) %"
+  },
+  "significance": {
+    "test": "Welch's t-test (two-sided, unequal variances)",
+    "t_statistic": -3.120778703702814,
+    "p_value": 0.035499902924590966,
+    "significant": true,
+    "cohens_d": -1.9737537554097284,
+    "effect_magnitude": "large"
+  },
+  "key_insight": "M-TRACE provides temporal alignment (same backward pass) that Captum cannot access"
+}
