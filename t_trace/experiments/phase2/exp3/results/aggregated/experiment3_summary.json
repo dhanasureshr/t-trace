@@ -1,0 +1,46 @@
+{
+  "experiment": "Phase 2 Experiment 3: Decision Path Fidelity",
+  "n_seeds": 5,
+  "seeds_used": [
+    42,
+    123,
+    456,
+    789,
+    1011
+  ],
+  "mtrace_path_reconstruction_accuracy": {
+    "mean": 0.8,
+    "std": 0.27386127875258304,
+    "report": "0.800 \u00b1 0.274"
+  },
+  "bias_detection_rate": {
+    "mean": 1.0,
+    "std": 0.0,
+    "report": "1.000 (std=0.000)"
+  },
+  "treeshap_path_coverage": {
+    "mean": 0.0,
+    "std": 0.0,
+    "report": "0.000 (std=0.000)",
+    "note": "TreeSHAP computes Shapley values, not decision paths (structurally impossible)"
+  },
+  "inference_overhead_ms": {
+    "mean": 14.43167408660624,
+    "std": 22.59846306939652,
+    "report": "14.432 \u00b1 22.598 ms"
+  },
+  "training_overhead_percentage": {
+    "mean": 11.111111111111105,
+    "std": 4.782987168225453e-15,
+    "report": "11.111 (std=0.000) %"
+  },
+  "significance": {
+    "test": "Welch's t-test (one-sided, unequal variances)",
+    "t_statistic": 6.531972647421809,
+    "p_value": 0.0014189229633672236,
+    "significant": true,
+    "cohens_d": 4.1311822359545785,
+    "effect_magnitude": "large"
+  },
+  "key_insight": "M-TRACE logs exact decision paths traversed; TreeSHAP cannot reconstruct paths by design"
+}

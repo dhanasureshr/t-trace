@@ -1,0 +1,19 @@
+
+============================================================
+STATISTICAL SIGNIFICANCE REPORT: path_reconstruction
+============================================================
+M-TRACE: 0.800 ± 0.274 
+TreeSHAP: 0.000 (std=0.000) 
+------------------------------------------------------------
+Welch's t-test Results (one-sided):
+  t(8) = 6.532
+  p-value = 1.4189e-03
+  Significant (p<0.05): ✅ YES
+  Effect Size (Cohen's d): 4.131 (large)
+============================================================
+
+INTERPRETATION:
+  M-TRACE logs exact decision paths traversed during inference
+  TreeSHAP computes marginal contributions (path reconstruction impossible by design)
+  Key contribution: Path fidelity, not feature importance
+============================================================

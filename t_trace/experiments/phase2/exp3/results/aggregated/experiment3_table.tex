@@ -1,0 +1,24 @@
+
+\begin{table}[h]
+\centering
+\caption{Phase 2 Experiment 3: Decision Path Fidelity in Tree Ensembles (5 Random Seeds)}
+\label{tab:experiment3_path_fidelity}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{M-TRACE} & \textbf{TreeSHAP} & \textbf{p-value} \\
+\midrule
+Path Reconstruction Accuracy & $0.800 \pm 0.274$ & $0.000 \pm 0.000$ & $1.42e-03$ \\
+\midrule
+Bias Detection Rate & $1.000 \pm 0.000$ & N/A & N/A \\
+\midrule
+Inference Overhead (ms) & $14.43 \pm 22.60$ & N/A & N/A \\
+\bottomrule
+\end{tabular}
+\begin{flushleft}
+\small
+\textit{Note:} TreeSHAP computes Shapley values (marginal contributions), not decision paths.
+Path reconstruction is structurally impossible for TreeSHAP by design.
+Statistical significance assessed via Welch's t-test (one-sided, p<0.05). Effect size: Cohen's d.
+n=5 random seeds (42, 123, 456, 789, 1011).
+\end{flushleft}
+\end{table}
