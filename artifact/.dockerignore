@@ -1,0 +1,47 @@
+# Git
+.git
+.gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Build artifacts
+build/
+dist/
+*.egg
+
+# Logs and results (will be generated during experiments)
+*.log
+mtrace_logs/
+results/raw/
+results/processed/
+results/figures/
+
+# Documentation (not needed for reproducibility)
+*.pdf
+*.md
+!README.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp

@@ -174,32 +174,47 @@ cython_debug/
 experiments/**/results/*
 !experiments/**/results/.gitkeep
 
+
 # ===== ARTIFACT DIRECTORY (Reproducibility Package) =====
-# Track: Code, configs, Dockerfile, requirements
+# Track: Code, configs, Dockerfile, requirements, .dockerignore
 # Ignore: Generated results, logs, caches
 
-# Generated experiment outputs (reviewers regenerate these)
+# === GENERATED OUTPUTS (DO NOT COMMIT) ===
 artifact/results/raw/*
+!artifact/results/raw/.gitkeep
 artifact/results/processed/*
+!artifact/results/processed/.gitkeep
 artifact/results/figures/*
-!artifact/results/.gitkeep  # Keep directory structure
+!artifact/results/figures/.gitkeep
 
-# Runtime logs
-artifact/mtrace_logs/
+# Runtime logs & ephemeral data
+artifact/mtrace_logs/*
+!artifact/mtrace_logs/.gitkeep
+artifact/**/*.parquet
+artifact/**/*.jsonl
 artifact/*.log
 
 # Python cache in artifact/
 artifact/**/__pycache__/
 artifact/**/*.pyc
 
-# Docker build artifacts
-artifact/docker/.build-cache/
-artifact/*.dockerignore
+# Docker build artifacts (NOT .dockerignore!)
+artifact/docker/.buildx/
+artifact/.docker/
 
 # IDE/editor files in artifact/
 artifact/.vscode/
 artifact/.idea/
 artifact/*.swp
 artifact/*.swo
+
+# === EXPLICITLY TRACK CRITICAL FILES ===
+!artifact/README.md
+!artifact/requirements.txt
+!artifact/docker/Dockerfile
+!artifact/.dockerignore          # ← CRITICAL: Track this!
+!artifact/scripts/*.py
+!artifact/config/*.yml
+!artifact/results/.gitkeep
 
 # Keep everything else in artifact/ tracked by default

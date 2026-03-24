@@ -1,0 +1,51 @@
+{
+  "python": {
+    "python_version": "3.12.3",
+    "packages": {
+      "torch": {
+        "installed": "2.5.1+cu121",
+        "expected": "2.5.1",
+        "match": true
+      },
+      "tensorflow": {
+        "installed": "2.20.0",
+        "expected": "2.20.0",
+        "match": true
+      },
+      "sklearn": {
+        "installed": "1.8.0",
+        "expected": "1.8.0",
+        "match": true
+      },
+      "pyarrow": {
+        "installed": "23.0.0",
+        "expected": "23.0.0",
+        "match": true
+      },
+      "pandas": {
+        "installed": "3.0.0",
+        "expected": "3.0.0",
+        "match": true
+      },
+      "numpy": {
+        "installed": "1.26.4",
+        "expected": "1.26.4",
+        "match": true
+      }
+    }
+  },
+  "gpu": {
+    "cuda_available": true,
+    "gpu_info": {
+      "name": "NVIDIA GeForce RTX 4080 SUPER",
+      "memory_gb": 16.700342272,
+      "cuda_version": "12.1",
+      "cudnn_version": 90100
+    }
+  },
+  "storage": {
+    "storage_accessible": true,
+    "errors": []
+  },
+  "overall_pass": true
+}
