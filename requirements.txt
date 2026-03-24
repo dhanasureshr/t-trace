@@ -1,0 +1,47 @@
+# =========================================================
+# M-TRACE Research Dependencies (v5)
+# Aligned with: Implementation v4, Experimental Plan v3
+# Hardware: RTX 4080 Super (CUDA 12.3), Ryzen 9 7900X
+# =========================================================
+
+# --- Core ML Frameworks (Phase 1 Validated) ---
+# PyTorch 2.3.0 is stable with CUDA 12.1/12.3
+torch==2.3.0
+torchvision==0.18.0
+# TensorFlow 2.16.1 supports CUDA 12
+tensorflow==2.16.1
+# Scikit-learn 1.4.2 (Validated in Phase 1)
+scikit-learn==1.4.2
+
+# --- Storage Engine (Implementation v4, Section 3.1) ---
+# PyArrow 16.1.0 for Parquet schema compliance
+pyarrow==16.1.0
+pandas==2.2.2
+numpy==1.26.4
+# Compression libraries for on-the-fly logging
+python-snappy==0.7.1
+zstandard==0.22.0
+
+# --- Analysis Engine (Implementation v4, Section 2.3) ---
+# Dash 2.17.0 for Interactive Dashboard
+dash==2.17.0
+plotly==5.22.0
+
+# --- Configuration & Utilities ---
+pyyaml==6.0.1
+python-dotenv==1.0.1
+
+# --- Phase 2 Benchmarking Tools (Experimental Plan v3) ---
+# Required for comparative analysis against SHAP/Captum/LIME
+shap==0.44.0
+captum==0.7.0
+lime==0.2.0.1
+
+# --- Hardware Monitoring (Experimental Plan v3) ---
+# Required for logging GPU temp/power inside Docker
+pynvml==11.5.0
+
+# --- Development & Testing (Coding Standards v4) ---
+pytest==8.2.0
+black==24.4.2
+flake8==7.0.0

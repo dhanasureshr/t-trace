@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+venv_verify/
+.venv/
+*.egg-info/
+.git
+.gitignore
+*.log
+mtrace_logs/
+*.parquet
+.DS_Store
+.env
