@@ -38,9 +38,9 @@ except ImportError:
 CONFIG = {
     "spurious_token": "movie",
     "token_id": None,
-    "output_dir": Path(__file__).parent.parent / "results",
+    "output_dir": Path(__file__).parent.parent / "exp2" / "results",
     # UPDATE THIS LINE TO YOUR ACTUAL LOG PATH:
-    "logs_dir": Path("/home/dhana/Documents/Ai/mtrace/t-trace/mtrace_logs") 
+    "logs_dir": Path("/home/dhana/Documents/Ai/mtrace/mtrace_logs") 
 }
 
 def setup_environment():
@@ -55,7 +55,7 @@ def load_and_preprocess_logs(run_id: str) -> Optional[pd.DataFrame]:
     df = loader.load_run_logs(run_id)
     
     if df is None or df.empty:
-        print(f"❌ No logs found for run_id {run_id}. Check the directory: {CONFIG["logs_dir"]}")
+        print(f"❌ No logs found for run_id {run_id}. Check the directory: {CONFIG['logs_dir']}")
         return None
     
     print(f"✅ Loaded {len(df)} log entries.")

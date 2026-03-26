@@ -1,155 +1,155 @@
 {
     "experiment": "Phase 2 - Exp 2: Gradient-Attention Causality (Refined)",
-    "run_id": "edaaaf54",
+    "run_id": "3520a604-efec-406f-bed5-9a44d1d9e77b",
     "filtering_applied": "Attention Threshold > 0.01",
     "noise_layers_removed": 0,
     "hypothesis": "Focusing on attention-active layers reveals the true causal mechanism.",
     "results": {
         "mtrace_refined": {
             "method": "M-TRACE (Attention-Filtered)",
-            "global_causality_score": 0.29218692654937356,
+            "global_causality_score": -0.049679001057450066,
             "temporal_alignment": true,
             "attention_threshold": 0.01,
             "total_layers": 89,
             "active_layers_count": 12,
             "removed_noise_layers": 0,
             "layers_analyzed": 12,
-            "top_layer_index": 84,
-            "top_layer_correlation": 0.7271937617591153,
+            "top_layer_index": 83,
+            "top_layer_correlation": 0.2245331010392641,
             "layer_details": [
                 {
                     "layer_index": 77,
-                    "correlation": 0.1282848741254006,
+                    "correlation": -0.22454002293181652,
                     "samples": 32,
-                    "mean_attn": 7.945547580718994,
-                    "mean_grad": 0.0015877059195190668
+                    "mean_attn": 7.938541889190674,
+                    "mean_grad": 0.001574728754349053
                 },
                 {
                     "layer_index": 78,
-                    "correlation": 0.07293603954928421,
+                    "correlation": -0.059039926905177204,
                     "samples": 32,
-                    "mean_attn": 8.208322525024414,
-                    "mean_grad": 0.0013196337968111038
+                    "mean_attn": 8.119220733642578,
+                    "mean_grad": 0.0015441816067323089
                 },
                 {
                     "layer_index": 79,
-                    "correlation": 0.45112496348665426,
+                    "correlation": -0.31025551360649756,
                     "samples": 32,
-                    "mean_attn": 9.150174140930176,
-                    "mean_grad": 0.0011549124028533697
+                    "mean_attn": 9.297321319580078,
+                    "mean_grad": 0.0012786134611815214
                 },
                 {
                     "layer_index": 80,
-                    "correlation": -0.05553654021626934,
+                    "correlation": -0.2398797010299185,
                     "samples": 32,
-                    "mean_attn": 8.720422744750977,
-                    "mean_grad": 0.0010692181531339884
+                    "mean_attn": 8.564476013183594,
+                    "mean_grad": 0.0015337885124608874
                 },
                 {
                     "layer_index": 81,
-                    "correlation": -0.13183950511779624,
+                    "correlation": -0.19654963238840437,
                     "samples": 32,
-                    "mean_attn": 9.933728218078613,
-                    "mean_grad": 0.001106373849324882
+                    "mean_attn": 9.713796615600586,
+                    "mean_grad": 0.0017017722129821777
                 },
                 {
                     "layer_index": 82,
-                    "correlation": 0.35512023741386456,
+                    "correlation": -0.08701140869655113,
                     "samples": 32,
-                    "mean_attn": 10.469178199768066,
-                    "mean_grad": 0.0011599468998610973
+                    "mean_attn": 10.593352317810059,
+                    "mean_grad": 0.0016323032323271036
                 },
                 {
                     "layer_index": 83,
-                    "correlation": 0.24471305367878907,
+                    "correlation": 0.2245331010392641,
                     "samples": 32,
-                    "mean_attn": 10.115243911743164,
-                    "mean_grad": 0.0010755036491900682
+                    "mean_attn": 10.023031234741211,
+                    "mean_grad": 0.0015401573618873954
                 },
                 {
                     "layer_index": 84,
-                    "correlation": 0.7271937617591153,
+                    "correlation": 0.19433248560839453,
                     "samples": 32,
-                    "mean_attn": 9.800901412963867,
-                    "mean_grad": 0.0011288679670542479
+                    "mean_attn": 9.914481163024902,
+                    "mean_grad": 0.001553994370624423
                 },
                 {
                     "layer_index": 85,
-                    "correlation": 0.2610868405166022,
+                    "correlation": 0.05714478527127464,
                     "samples": 32,
-                    "mean_attn": 9.727226257324219,
-                    "mean_grad": 0.0023226728662848473
+                    "mean_attn": 9.522784233093262,
+                    "mean_grad": 0.0026511065661907196
                 },
                 {
                     "layer_index": 86,
-                    "correlation": 0.4565718756707206,
+                    "correlation": -0.07489749322952552,
                     "samples": 32,
-                    "mean_attn": 8.764938354492188,
-                    "mean_grad": 0.002330923452973366
+                    "mean_attn": 9.332025527954102,
+                    "mean_grad": 0.003967030439525843
                 },
                 {
                     "layer_index": 87,
-                    "correlation": 0.5743874068291716,
+                    "correlation": 0.0339325726347455,
                     "samples": 32,
-                    "mean_attn": 8.49808120727539,
-                    "mean_grad": 0.0021749879233539104
+                    "mean_attn": 9.70979118347168,
+                    "mean_grad": 0.004227933008223772
                 },
                 {
                     "layer_index": 88,
-                    "correlation": 0.4222001108969464,
+                    "correlation": 0.08608274154481127,
                     "samples": 32,
-                    "mean_attn": 8.759576797485352,
-                    "mean_grad": 0.002896498888731003
+                    "mean_attn": 9.449445724487305,
+                    "mean_grad": 0.004264104180037975
                 }
             ],
             "all_layer_stats": [
                 {
                     "layer_index": 77,
-                    "mean_attention": 0.2796861529350281
+                    "mean_attention": 0.2807520925998688
                 },
                 {
                     "layer_index": 78,
-                    "mean_attention": 0.2944055497646332
+                    "mean_attention": 0.28932833671569824
                 },
                 {
                     "layer_index": 79,
-                    "mean_attention": 0.3430434465408325
+                    "mean_attention": 0.3545014262199402
                 },
                 {
                     "layer_index": 80,
-                    "mean_attention": 0.3509814739227295
+                    "mean_attention": 0.3348556458950043
                 },
                 {
                     "layer_index": 81,
-                    "mean_attention": 0.4235473573207855
+                    "mean_attention": 0.404918372631073
                 },
                 {
                     "layer_index": 82,
-                    "mean_attention": 0.48782554268836975
+                    "mean_attention": 0.507821261882782
                 },
                 {
                     "layer_index": 83,
-                    "mean_attention": 0.4539189636707306
+                    "mean_attention": 0.44385969638824463
                 },
                 {
                     "layer_index": 84,
-                    "mean_attention": 0.42214053869247437
+                    "mean_attention": 0.43167901039123535
                 },
                 {
                     "layer_index": 85,
-                    "mean_attention": 0.417288213968277
+                    "mean_attention": 0.39540034532546997
                 },
                 {
                     "layer_index": 86,
-                    "mean_attention": 0.3433784246444702
+                    "mean_attention": 0.3944576382637024
                 },
                 {
                     "layer_index": 87,
-                    "mean_attention": 0.32284489274024963
+                    "mean_attention": 0.4155001938343048
                 },
                 {
                     "layer_index": 88,
-                    "mean_attention": 0.3445241451263428
+                    "mean_attention": 0.3978179097175598
                 }
             ]
         },
@@ -160,5 +160,5 @@
             "note": "Post-hoc approximation; cannot access exact simultaneous states."
         }
     },
-    "conclusion": "After filtering 0 noise layers, M-TRACE achieved a causality score of 0.29, demonstrating that the spurious correlation was learned in specific high-attention layers."
+    "conclusion": "After filtering 0 noise layers, M-TRACE achieved a causality score of -0.05, demonstrating that the spurious correlation was learned in specific high-attention layers."
 }
