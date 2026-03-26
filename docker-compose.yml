@@ -1,22 +1,23 @@
 version: '3.8'
 
 services:
-  # Service 1: M-TRACE Dashboard (Analysis Engine)
   dashboard:
     build: .
     container_name: mtrace_dashboard
     ports:
-      - "8050:8050"  # Dash Default Port
+      - "8050:8050"
     volumes:
-      # Persist Logs for Analysis (Host <-> Container)
       - ./mtrace_logs:/app/mtrace_logs
-      # Mount Config for Dynamic Updates (Per Implementation v4 Section 3.1.4)
-      - ./config.yml:/app/config.yml
-      # Mount Code for Hot Reloading (Debug Mode)
+      # Mount config.yml from your actual location
+      - ./t_trace/config/config.yml:/app/t_trace/config/config.yml
       - ./t_trace:/app/t_trace
     environment:
       - CUDA_VISIBLE_DEVICES=0
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+      - TF_CPP_MIN_LOG_LEVEL=2
       - MTRACE_MODE=development
+      - MTRACE_PROJECT_ROOT=/app
+      - MTRACE_CONFIG_PATH=/app/t_trace/config/config.yml
     command: python -m t_trace.analysis_engine.dashboard
     runtime: nvidia
     deploy:
@@ -27,22 +28,22 @@ services:
               count: 1
               capabilities: [gpu]
 
-  # Service 2: Experiment Runner (Logging Engine)
   experiments:
     build: .
     container_name: mtrace_experiments
     volumes:
-      # Persist Logs
       - ./mtrace_logs:/app/mtrace_logs
-      # Mount Config
-      - ./config.yml:/app/config.yml
-      # Mount Code
+      # Mount config.yml from your actual location
+      - ./t_trace/config/config.yml:/app/t_trace/config/config.yml
       - ./t_trace:/app/t_trace
       - ./experiments:/app/experiments
     environment:
       - CUDA_VISIBLE_DEVICES=0
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+      - TF_CPP_MIN_LOG_LEVEL=2
       - MTRACE_MODE=development
-    # Interactive mode for running specific scripts
+      - MTRACE_PROJECT_ROOT=/app
+      - MTRACE_CONFIG_PATH=/app/t_trace/config/config.yml
     stdin_open: true
     tty: true
     runtime: nvidia
