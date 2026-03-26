@@ -1,0 +1,25 @@
+mode: "development"
+sparse_logging:
+  enabled: false  # DISABLE for validation - capture ALL logs
+  sparse_threshold: 0.0
+  top_k_values: 1000
+compression:
+  enabled: true
+  compression_type: "snappy"
+  compression_level: 1
+logging_frequency:
+  batch_size: 100
+  time_interval: 10
+default_fields:
+  - model_type
+  - framework
+  - timestamp
+  - run_id
+  - mode
+  - layer_name
+  - losses
+custom_fields:
+  - attention_weights
+  - feature_maps
+  - gradients
+  - output_activations

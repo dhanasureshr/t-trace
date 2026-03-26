@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mtrace-experiment:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        - USER_ID=${UID:-1000}
+        - GROUP_ID=${GID:-1000}
+    image: mtrace:latest
+    container_name: mtrace_container
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - PYTHONUNBUFFERED=1
+      - TF_CPP_MIN_LOG_LEVEL=2
+    volumes:
+      # Mount Project Code (Read Only for safety, optional)
+      - ../t_trace:/app/mtrace/t_trace
+      - ../t_trace/config/config.yml:/app/mtrace/t_trace/config/config.yml:ro
+      # Mount Logs (Read/Write - Persist to NVMe SSD)
+      - ../mtrace_logs:/app/mtrace/mtrace_logs
+      - ../t_trace/experiments:/app/mtrace/experiments
+      # Mount Results
+      - ../t_trace/experiments/phase2/exp1/results:/app/mtrace/t_trace/experiments/phase2/exp1/results
+      - ../t_trace/experiments/phase2/exp2/results:/app/mtrace/t_trace/experiments/phase2/exp2/results
+      - ../t_trace/experiments/phase2/exp3/results:/app/mtrace/t_trace/experiments/phase2/exp3/results
+      - ../t_trace/experiments/phase2/exp4/results:/app/mtrace/t_trace/experiments/phase2/exp4/results
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    stdin_open: true
+    tty: true
+    # Network Mode: Host (Optional, useful for Dash Dashboard access)
+    network_mode: "host"
