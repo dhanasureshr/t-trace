@@ -14,7 +14,10 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True 
       - PYTHONUNBUFFERED=1
+      - OMP_NUM_THREADS=12 
+      - MKL_NUM_THREADS=12
       - TF_CPP_MIN_LOG_LEVEL=2
     volumes:
       # Mount Project Code (Read Only for safety, optional)
