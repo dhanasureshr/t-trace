@@ -26,6 +26,8 @@ zstandard==0.22.0
 # Dash 2.17.0 for Interactive Dashboard
 dash==2.17.0
 plotly==5.22.0
+kaleido==0.2.1
+seaborn==0.13.2 
 
 # --- Configuration & Utilities ---
 pyyaml==6.0.1
@@ -33,15 +35,25 @@ python-dotenv==1.0.1
 
 # --- Phase 2 Benchmarking Tools (Experimental Plan v3) ---
 # Required for comparative analysis against SHAP/Captum/LIME
-shap==0.44.0
 captum==0.7.0
 lime==0.2.0.1
+transformers==4.40.0
+huggingface_hub==0.23.0
+safetensors==0.4.3
+shap==0.44.1
+captum==0.7.0
+requests==2.31.0
+pillow==10.3.0
 
 # --- Hardware Monitoring (Experimental Plan v3) ---
 # Required for logging GPU temp/power inside Docker
 pynvml==11.5.0
+pyyaml==6.0.1
+tqdm==4.66.2
 
 # --- Development & Testing (Coding Standards v4) ---
 pytest==8.2.0
 black==24.4.2
 flake8==7.0.0
+black==24.4.2
+scipy==1.13.0
