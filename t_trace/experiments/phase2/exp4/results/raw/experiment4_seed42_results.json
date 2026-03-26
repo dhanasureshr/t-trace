@@ -1,11 +1,11 @@
 {
   "seed": 42,
-  "timestamp": "2026-03-23T15:56:32.086957",
+  "timestamp": "2026-03-26T11:05:29.567547",
   "metrics": {
     "mtrace_capture_rate": 1.0,
     "fusion_insight_score": 1.0,
     "lime_baseline": 0.0,
-    "avg_inference_time_ms": 15.537047386169434,
+    "avg_inference_time_ms": 17.034931182861328,
     "total_cases": 50,
     "successful_captures": 50
   },

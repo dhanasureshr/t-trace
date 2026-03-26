@@ -1,0 +1,13 @@
+{
+  "success": true,
+  "layers_found": 24,
+  "manual_captures": 24,
+  "sample_layers": [
+    "manual_hook:CLIPAttention",
+    "manual_hook:CLIPAttention",
+    "manual_hook:CLIPAttention",
+    "manual_hook:CLIPAttention",
+    "manual_hook:CLIPAttention"
+  ],
+  "inference_time_ms": 212.02754974365234
+}
