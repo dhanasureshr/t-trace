@@ -42,6 +42,15 @@ RUN curl -sS https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
     rm get-pip.py && \
     python -m pip install --no-cache-dir --upgrade pip
 
+
+# === ADD THESE CUDA ENVIRONMENT VARIABLES ===
+ENV CUDA_VISIBLE_DEVICES=0
+ENV PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+ENV TF_CPP_MIN_LOG_LEVEL=2
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+# === END CUDA ENV VARIABLES ===
+
 # Verify Python/pip installation
 RUN python --version && pip --version
 

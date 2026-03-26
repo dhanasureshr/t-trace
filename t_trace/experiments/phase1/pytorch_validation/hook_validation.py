@@ -30,7 +30,10 @@ def get_vram_gb():
 def profile_minimal():
     print("="*70)
     print("t-trace PHASE 1 - MINIMAL HOOK VALIDATION")
-    print(f"GPU: {pynvml.nvmlDeviceGetName(handle).decode()}")
+    gpu_name = pynvml.nvmlDeviceGetName(handle)
+    if isinstance(gpu_name, bytes):
+        gpu_name = gpu_name.decode(errors="ignore")
+    print(f"GPU: {gpu_name}")
     print("⚠️  Using ONLY 10 iterations to prevent OOM")
     print("="*70)
     
@@ -80,7 +83,7 @@ def profile_minimal():
     
     if logs:
         print(f"   Sample log keys: {list(logs[0].keys())[:4]}")
-        print(f"   First log layer: {logs[0]["internal_states"].get('layer_name', 'N/A')}")
+        print(f"   First log layer: {logs[0]['internal_states'].get('layer_name', 'N/A')}")
     
     # Check log files on disk
     log_dir = Path("mtrace_logs/development")
