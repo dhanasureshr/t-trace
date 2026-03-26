@@ -1,24 +1,37 @@
 {
   "seed": 42,
-  "timestamp": "2026-03-23T09:07:31.590381",
+  "timestamp": "2026-03-26T10:23:57.988053",
   "metrics": {
     "mtrace_temporal_precision": 1.0,
     "shap_temporal_precision": 0.0,
-    "mtrace_overhead_ms": 0.9799059998840676,
-    "baseline_latency_ms": 0.8623172798979795,
+    "mtrace_overhead_ms": 284.37811940020765,
+    "baseline_latency_ms": 250.25274507218273,
     "overhead_percentage": 13.636363636363635
   },
   "additional_metrics": {
-    "baseline_latency_ms": 1.444258700212231,
-    "mtrace_latency_ms": 2.4241647000962985,
-    "overhead_percentage": 67.84837091444021,
-    "raw_precision_scores": [
+    "elapsed_time_seconds": 1.4218905970010383,
+    "n_samples": 5,
+    "raw_precision_values": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       1,
       1,
       1,
       1,
       1
-    ],
-    "n_samples": 5
+    ]
   }
 }

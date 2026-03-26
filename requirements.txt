@@ -6,8 +6,9 @@
 
 # --- Core ML Frameworks (Phase 1 Validated) ---
 # PyTorch 2.3.0 is stable with CUDA 12.1/12.3
-torch==2.3.0
-torchvision==0.18.0
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch>=2.3.0
+torchvision>=0.18.0
 # TensorFlow 2.16.1 supports CUDA 12
 tensorflow==2.16.1
 # Scikit-learn 1.4.2 (Validated in Phase 1)
