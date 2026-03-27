@@ -1,4 +1,4 @@
-# M-TRACE: Model Transparency through Recursive Analysis (Anonymous Submission)
+# M-TRACE: Model Transparency through Recursive Analysis of Contextual Encapsulation (Anonymous Submission)
 
 
 ## 🚀 Reproducibility Instructions
