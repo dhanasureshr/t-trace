@@ -42,6 +42,10 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy Project Code
 COPY --chown=mtrace:mtrace . .
 
+
+# Set executable permissions INSIDE the image (not on mounted volumes)
+RUN chmod +x t_trace/experiments/run_all_experiments.sh
+
 # Switch to Non-Root User
 USER mtrace
 
