@@ -2,10 +2,17 @@ import sys
 import os
 import pytest
 import pyarrow as pa
-from schema.log_schema import LOG_SCHEMA, validate_log_entry, save_logs_to_parquet, load_logs_from_parquet
+import sys
+import os
+
+
+
+# Add project root
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+from t_trace.schema.log_schema import LOG_SCHEMA, validate_log_entry, save_logs_to_parquet, load_logs_from_parquet
 import numpy as np
-# Adding project root directory to path for module imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 
 def test_validate_log_entry_valid():
     """Test that a valid log entry passes validation."""
@@ -49,6 +56,7 @@ def test_validate_log_entry_valid():
             },
         },
     }
+
 
     # Validate the valid log entry
     assert validate_log_entry(valid_log_entry) == True
