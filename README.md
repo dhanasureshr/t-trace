@@ -1,5 +1,4 @@
-# M-TRACE: Model Transparency through Recursive Analysis of Contextual Encapsulation (Anonymous Submission)
-
+# M-TRACE: Model Transparency through Recursive Analysis of Contextual Encapsulation
 
 ## 🚀 Reproducibility Instructions
 All experiments are containerized. No local Python environment setup is required.
