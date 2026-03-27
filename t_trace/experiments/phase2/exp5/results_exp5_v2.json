@@ -1,24 +1,24 @@
 {
-  "experiment_id": "exp5_static_72239023",
+  "experiment_id": "exp5_static_7762a80a",
   "task_type": "Static Aggregation (Tabular)",
   "metrics": {
     "mtrace": {
-      "inference_latency_ms": 0.24,
-      "disk_write_time_ms": 4.81,
-      "log_file_size_kb": 30.57,
-      "parse_load_time_ms": 7.87,
+      "inference_latency_ms": 0.19,
+      "disk_write_time_ms": 4.6,
+      "log_file_size_kb": 38.77,
+      "parse_load_time_ms": 6.76,
       "schema_complexity_score": 23,
       "found_root_cause": false,
       "logs_captured_count": 2
     },
     "shap": {
-      "total_analysis_time_ms": 3357.01,
+      "total_analysis_time_ms": 3644.64,
       "memory_footprint_kb": 2.34,
       "found_root_cause": true
     },
     "comparative": {
       "temporal_redundancy_index": 0,
-      "storage_overhead_factor": 13.04,
+      "storage_overhead_factor": 16.54,
       "conclusion": "M-TRACE introduces unnecessary I/O and schema complexity for static tasks."
     }
   }

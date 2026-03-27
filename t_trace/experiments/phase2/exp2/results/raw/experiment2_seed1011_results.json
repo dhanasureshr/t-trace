@@ -1,15 +1,15 @@
 {
   "seed": 1011,
-  "timestamp": "2026-03-23T13:36:30.649862",
+  "timestamp": "2026-03-26T10:57:29.520445",
   "metrics": {
     "mtrace_causality_score": 0.09143132107980577,
     "captum_causality_score": 0.32,
-    "training_time_sec": 90.44805628800168,
+    "training_time_sec": 92.5019961570033,
     "overhead_percentage": 17.64705882352942,
     "active_layers_analyzed": 12
   },
   "additional_metrics": {
-    "run_id": "50120938-6906-4b51-bd35-6ac5d8e51baa",
+    "run_id": "53696313-be34-4740-870d-407454acf164",
     "mtrace_details": {
       "method": "M-TRACE (Attention-Filtered)",
       "global_causality_score": 0.09143132107980577,

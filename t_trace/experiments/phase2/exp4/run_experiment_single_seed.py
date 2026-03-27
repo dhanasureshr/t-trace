@@ -201,7 +201,7 @@ def run_single_seed_experiment(
     model_id = "openai/clip-vit-base-patch32"
     config = CLIPConfig.from_pretrained(model_id)
     config.output_attentions = True
-    model = CLIPModel.from_pretrained(model_id, config=config,use_safetensors=True).to(device)
+    model = CLIPModel.from_pretrained(model_id, config=config,).to(device)
     model.eval()
     processor = CLIPProcessor.from_pretrained(model_id)
     print("✅ Model Loaded.")

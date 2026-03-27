@@ -25,13 +25,13 @@
     "note": "LIME explains modalities separately (no fusion mechanism access)"
   },
   "inference_time_ms": {
-    "mean": 14.10820484161377,
-    "std": 0.8030539314896965,
-    "report": "14.108 \u00b1 0.803 ms"
+    "mean": 17.104637145996094,
+    "std": 0.12497054617649404,
+    "report": "17.105 \u00b1 0.125 ms"
   },
   "significance": {
     "test": "Welch's t-test (one-sided, unequal variances)",
-    "t_statistic": "Infinity",
+    "t_statistic": Infinity,
     "p_value": 0.0,
     "significant": true,
     "cohens_d": 0.0,

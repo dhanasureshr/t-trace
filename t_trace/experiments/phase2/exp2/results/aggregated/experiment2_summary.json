@@ -20,19 +20,19 @@
     "note": "Simulated baseline (0.32) per literature estimates"
   },
   "training_time_sec": {
-    "mean": 90.8336355256004,
-    "std": 0.32160419433682597,
-    "report": "90.834 \u00b1 0.322 sec"
+    "mean": 93.00254365420042,
+    "std": 0.3312073476150972,
+    "report": "93.003 \u00b1 0.331 sec"
   },
   "overhead_percentage": {
-    "mean": 17.647058823529417,
-    "std": 7.53644380168212e-15,
+    "mean": 17.64705882352942,
+    "std": 3.972054645195637e-15,
     "report": "17.647 (std=0.000) %"
   },
   "significance": {
     "test": "Welch's t-test (two-sided, unequal variances)",
     "t_statistic": -3.120778703702814,
-    "p_value": 0.035499902924590966,
+    "p_value": 0.03549990292459097,
     "significant": true,
     "cohens_d": -1.9737537554097284,
     "effect_magnitude": "large"

@@ -59,7 +59,7 @@ CONFIG = {
     "mtrace_mode": "development",  # Critical: Captures gradients
     "output_dir": Path(__file__).parent.parent / "results",
     "log_dir": Path(__file__).parent.parent / "logs",
-    "storage_dir": Path(__file__).resolve().parents[5] / "t-trace" / "mtrace_logs",
+    "storage_dir": Path(__file__).resolve().parents[5] / "mtrace" / "mtrace_logs",
 }
 
 
