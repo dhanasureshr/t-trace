@@ -22,7 +22,7 @@ docker compose up -d --build
 ### Step 2: Run All Experiments
 # This script runs Phase 1 & Phase 2 experiments sequentially
 ```bash
-docker-compose run mtrace-experiment bash t_trace/experiments/run_all_experiments.sh
+docker compose exec mtrace-experiment bash t_trace/experiments/run_all_experiments.sh
 ```
 
 ### Step 3: View Results
