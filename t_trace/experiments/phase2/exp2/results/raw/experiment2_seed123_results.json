@@ -1,16 +1,16 @@
 {
   "seed": 123,
-  "timestamp": "2026-03-29T15:44:36.223034",
+  "timestamp": "2026-03-29T17:45:27.018612",
   "metrics": {
     "mtrace_causality_score": -0.03921675153046673,
     "captum_causality_score": 0.1331166703763508,
-    "training_time_sec": 90.24274014299954,
-    "overhead_percentage": 17.64705882352942,
+    "training_time_sec": 90.41421986699788,
+    "overhead_percentage": 17.647058823529413,
     "active_layers_analyzed": 12
   },
   "additional_metrics": {
-    "run_id": "b52eed82-9323-45cf-8e35-db2d95a512fe",
-    "captum_time_sec": 0.08577752113342285,
+    "run_id": "db5b6e26-9fa3-42c7-96c4-e4077e757d10",
+    "captum_time_sec": 0.08561825752258301,
     "mtrace_details": {
       "method": "M-TRACE (Real-Time)",
       "global_causality_score": -0.03921675153046673,
@@ -162,8 +162,8 @@
     "captum_details": {
       "method": "Captum (LayerIntegratedGradients)",
       "global_causality_score": 0.1331166703763508,
-      "computation_time_sec": 0.08577752113342285,
-      "peak_memory_kb": 90.0458984375,
+      "computation_time_sec": 0.08561825752258301,
+      "peak_memory_kb": 90.8603515625,
       "temporal_alignment": false,
       "n_steps": 50,
       "attribution_map": [

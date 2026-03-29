@@ -20,13 +20,13 @@
     "note": "Simulated baseline (0.32) per literature estimates"
   },
   "training_time_sec": {
-    "mean": 90.62538217379915,
-    "std": 0.33628473703241646,
-    "report": "90.625 \u00b1 0.336 sec"
+    "mean": 90.79262950579941,
+    "std": 0.4489275388323263,
+    "report": "90.793 \u00b1 0.449 sec"
   },
   "overhead_percentage": {
-    "mean": 17.64705882352942,
-    "std": 2.5121479338940403e-15,
+    "mean": 17.647058823529413,
+    "std": 8.140289677804162e-15,
     "report": "17.647 (std=0.000) %"
   },
   "significance": {

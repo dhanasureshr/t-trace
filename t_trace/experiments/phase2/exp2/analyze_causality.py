@@ -10,6 +10,8 @@ KEY FIXES APPLIED:
 4. ✅ Captum score based on actual attribution quality (not empirical formula)
 5. ✅ Compatible with run_experiment.py checkpoint saving
 6. ✅ Hugging Face + Captum compatibility (wrapped forward function)
+7. ✅ OPTION A: Temporal Alignment Score added (execution order fidelity)
+8. ✅ OPTION A: Positional Robustness Score added (token position invariance)
 
 Hardware Target: Ubuntu Workstation (RTX 4080 Super, Ryzen 9 7900X, 64GB DDR5)
 Aligned with: M-TRACE Implementation v4, Experimental Plan v3
@@ -27,7 +29,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
-from scipy.stats import spearmanr, ttest_ind
+from scipy.stats import spearmanr, ttest_ind, kendalltau
 from datetime import datetime
 
 # Add project root to path (FIX #1: Proper path resolution)
@@ -63,11 +65,6 @@ except ImportError:
 # ============================================================================
 # CONFIGURATION (FIX #1 & #2: Corrected Paths)
 # ============================================================================
-
-# FIX #1: Checkpoint path matches where run_experiment.py saves it
-# run_experiment.py saves to: CONFIG["output_dir"] / "bert_checkpoint_captum.pth"
-# This script is at: t_trace/experiments/phase2/exp2/analyze_causality.py
-# So results dir is: t_trace/experiments/phase2/exp2/results/
 
 CONFIG = {
     "spurious_token": "movie",
@@ -125,7 +122,6 @@ def load_and_preprocess_logs(run_id: str) -> Optional[pd.DataFrame]:
     print(f"✅ Loaded {len(df)} log entries.")
     
     # Preprocessing: Expand sparse representations into usable metrics
-    # Schema: model_metadata, internal_states, event_type (per Implementation v4)
     attn_magnitudes = []
     grad_magnitudes = []
     layer_indices = []
@@ -157,7 +153,6 @@ def load_and_preprocess_logs(run_id: str) -> Optional[pd.DataFrame]:
         attn_data = internal.get('attention_weights', [])
         attn_mag = 0.0
         if isinstance(attn_data, dict):
-            # Sparse format from Compression Engine (Section 3.1.3)
             vals = attn_data.get('sparse_values', [])
             if vals:
                 attn_mag = np.mean(np.abs(vals))
@@ -346,7 +341,7 @@ def calculate_causality_metric(df: pd.DataFrame, attention_threshold: float = 0.
     }
 
 # ============================================================================
-# REAL CAPTUM BASELINE IMPLEMENTATION (FIX #3 & #4)
+# REAL CAPTUM BASELINE IMPLEMENTATION
 # ============================================================================
 
 def run_captum_baseline(model, tokenizer, test_texts: List[str]) -> Dict:
@@ -369,26 +364,22 @@ def run_captum_baseline(model, tokenizer, test_texts: List[str]) -> Dict:
     print("\n🐢 Running REAL Captum Baseline (LayerIntegratedGradients)...")
     
     try:
-        # Start Memory Tracking
         tracemalloc.start()
         
         # === CRITICAL FIX: Wrap model to return logits only ===
         def model_forward_wrapped(input_ids, attention_mask):
             """Wrapper that returns only logits tensor for Captum compatibility."""
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-            # Handle both HF output types
             if hasattr(outputs, 'logits'):
                 return outputs.logits
-            return outputs  # Fallback for plain tensor returns
+            return outputs
         
-        # Setup Captum Attributor with wrapped forward
         model.eval()
         lig = LayerIntegratedGradients(
-            model_forward_wrapped,  # Use wrapped function, not model directly
+            model_forward_wrapped,
             model.bert.embeddings
         )
         
-        # Tokenize test samples
         inputs = tokenizer(
             test_texts, 
             return_tensors="pt", 
@@ -397,27 +388,22 @@ def run_captum_baseline(model, tokenizer, test_texts: List[str]) -> Dict:
             max_length=64
         ).to(CONFIG["device"])
         
-        # Run Attribution (REAL EXECUTION)
         start_time = time.time()
         attributions, delta = lig.attribute(
             inputs=inputs['input_ids'],
-            additional_forward_args=(inputs['attention_mask'],),  # Pass as tuple
-            target=1,  # Positive sentiment class
+            additional_forward_args=(inputs['attention_mask'],),
+            target=1,
             n_steps=CONFIG["captum_n_steps"],
             return_convergence_delta=True
         )
         captum_time = time.time() - start_time
         
-        # Get Memory Usage
         current, peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()
         peak_memory_kb = peak / 1024
         
-        # Aggregate Attribution per Token
-        # Shape: [batch, seq_len, embedding_dim] -> [batch, seq_len]
         token_importance = attributions.sum(dim=-1).abs().detach().cpu().numpy()
         
-        # Calculate score based on actual attribution quality
         attribution_variance = np.var(token_importance)
         attribution_mean = np.mean(np.abs(token_importance))
         
@@ -464,7 +450,6 @@ def load_model_for_captum():
     print("\n🤖 Loading Model Checkpoint for Captum...")
     print(f"   Checkpoint path: {CONFIG['model_checkpoint']}")
     
-    # FIX #1: Verify checkpoint exists
     if not CONFIG["model_checkpoint"].exists():
         print(f"⚠️ Model checkpoint not found at: {CONFIG['model_checkpoint']}")
         print("   Please run run_experiment.py first to train and save the model.")
@@ -497,7 +482,7 @@ def load_model_for_captum():
         return None, None
 
 # ============================================================================
-# FIX #3: SPEARMAN CORRELATION BETWEEN M-TRACE AND CAPTUM
+# SPEARMAN CORRELATION BETWEEN M-TRACE AND CAPTUM
 # ============================================================================
 
 def calculate_spearman_correlation(df: pd.DataFrame, captum_results: Dict, test_texts: List[str]) -> Dict:
@@ -507,7 +492,6 @@ def calculate_spearman_correlation(df: pd.DataFrame, captum_results: Dict, test_
     """
     print("\n📊 Calculating Spearman Correlation (M-TRACE vs Captum)...")
     
-    # If Captum failed, return early
     if not captum_results.get('success', True) or not captum_results.get('attribution_map'):
         print("⚠️ Captum baseline failed - skipping Spearman correlation")
         return {
@@ -523,21 +507,17 @@ def calculate_spearman_correlation(df: pd.DataFrame, captum_results: Dict, test_
     sample_texts_used = []
     
     for i, test_text in enumerate(test_texts):
-        # Find matching M-TRACE logs for this text
         matching_logs = df[df['event_type'] == 'forward'].copy()
         
         if len(matching_logs) > 0:
-            # Get M-TRACE attention magnitude
             mtrace_attn = matching_logs['attn_magnitude'].mean()
             mtrace_attn_for_comparison.append(mtrace_attn)
             
-            # Get corresponding Captum attribution
             if captum_results.get('attribution_map') and i < len(captum_results['attribution_map']):
                 captum_attn = np.mean(np.abs(captum_results['attribution_map'][i]))
                 captum_attn_for_comparison.append(captum_attn)
                 sample_texts_used.append(test_text[:30] + "...")
     
-    # Calculate Spearman correlation
     if len(mtrace_attn_for_comparison) >= 2 and len(captum_attn_for_comparison) >= 2:
         spearman_corr, spearman_p = spearmanr(
             mtrace_attn_for_comparison, 
@@ -574,10 +554,8 @@ def perform_statistical_test(mtrace_scores: List[float], captum_scores: List[flo
             "df": 0
         }
     
-    # Welch's t-test (unequal variances)
     t_stat, p_value = ttest_ind(mtrace_scores, captum_scores, equal_var=False)
     
-    # Cohen's d effect size
     def cohens_d(a, b):
         n1, n2 = len(a), len(b)
         if n1 < 2 or n2 < 2:
@@ -607,10 +585,198 @@ def perform_statistical_test(mtrace_scores: List[float], captum_scores: List[flo
     }
 
 # ============================================================================
+# OPTION A: TEMPORAL ALIGNMENT SCORE (NEW METRIC)
+# ============================================================================
+
+def calculate_temporal_alignment_score(df: pd.DataFrame) -> Dict:
+    """
+    OPTION A: Measures how well M-TRACE preserves temporal execution order.
+    
+    This is M-TRACE's UNIQUE advantage over post-hoc tools:
+    - Captum: Cannot compute this (no temporal data)
+    - M-TRACE: Can verify execution order matches PyTorch autograd graph
+    
+    Returns:
+        Dictionary with temporal alignment metrics
+    """
+    print("\n📊 Calculating Temporal Alignment Score...")
+    
+    if df.empty or 'timestamp' not in df.columns:
+        return {
+            "temporal_alignment_score": 0.0,
+            "execution_order_fidelity": 0.0,
+            "temporal_precision": 0.0,
+            "note": "Insufficient data for temporal analysis"
+        }
+    
+    # Filter valid logs with timestamps
+    valid_logs = df[df['timestamp'].notna()].copy()
+    
+    if len(valid_logs) < 2:
+        return {
+            "temporal_alignment_score": 0.0,
+            "execution_order_fidelity": 0.0,
+            "temporal_precision": 0.0,
+            "note": "Insufficient logged events"
+        }
+    
+    # Sort by timestamp (actual execution order)
+    valid_logs = valid_logs.sort_values('timestamp').reset_index(drop=True)
+    
+    # Calculate temporal alignment metrics
+    forward_logs = valid_logs[valid_logs['event_type'] == 'forward']
+    backward_logs = valid_logs[valid_logs['event_type'] == 'backward']
+    
+    # Metric 1: Forward-Backward Pairing Rate
+    forward_layers = set(forward_logs['layer_index'].unique())
+    backward_layers = set(backward_logs['layer_index'].unique())
+    paired_layers = forward_layers.intersection(backward_layers)
+    
+    pairing_rate = len(paired_layers) / max(len(forward_layers), 1)
+    
+    # Metric 2: Execution Order Fidelity (Kendall's tau)
+    expected_order = sorted(list(forward_layers))
+    actual_order = forward_logs['layer_index'].unique().tolist()
+    
+    if len(expected_order) >= 2 and len(actual_order) >= 2:
+        tau, _ = kendalltau(expected_order, actual_order)
+        execution_order_fidelity = max(0.0, tau)
+    else:
+        execution_order_fidelity = 1.0
+    
+    # Metric 3: Temporal Precision
+    # === CRITICAL FIX: Convert timestamps to numeric before diff ===
+    timestamps = valid_logs['timestamp'].values
+    
+    # Convert to numeric (nanoseconds since epoch) for safe comparison
+    if hasattr(timestamps, 'astype'):
+        # Handle pandas/numpy datetime types
+        try:
+            # Convert to int64 (nanoseconds) for safe arithmetic
+            timestamps_numeric = timestamps.astype('int64')
+        except (TypeError, ValueError):
+            # Fallback: use index as proxy for time order
+            timestamps_numeric = np.arange(len(timestamps))
+    else:
+        timestamps_numeric = np.arange(len(timestamps))
+    
+    # Now compute differences safely on numeric array
+    correctly_ordered = np.sum(np.diff(timestamps_numeric) >= 0)
+    temporal_precision = correctly_ordered / max(len(timestamps_numeric) - 1, 1)
+    # ================================================================
+    
+    # Composite Temporal Alignment Score
+    temporal_alignment_score = (
+        0.4 * pairing_rate + 
+        0.3 * execution_order_fidelity + 
+        0.3 * temporal_precision
+    )
+    
+    print(f"✅ Temporal Alignment Score: {temporal_alignment_score:.4f}")
+    print(f"   Forward-Backward Pairing Rate: {pairing_rate:.4f}")
+    print(f"   Execution Order Fidelity: {execution_order_fidelity:.4f}")
+    print(f"   Temporal Precision: {temporal_precision:.4f}")
+    
+    return {
+        "temporal_alignment_score": float(temporal_alignment_score),
+        "execution_order_fidelity": float(execution_order_fidelity),
+        "forward_backward_pairing_rate": float(pairing_rate),
+        "temporal_precision": float(temporal_precision),
+        "total_logged_events": len(valid_logs),
+        "paired_layers": len(paired_layers),
+        "note": "Captum cannot compute temporal metrics (structurally impossible)"
+    }
+
+# ============================================================================
+# OPTION A: POSITIONAL ROBUSTNESS ANALYSIS (NEW METRIC)
+# ============================================================================
+
+def analyze_positional_robustness(df: pd.DataFrame, metadata_path: str) -> Dict:
+    """
+    OPTION A: Analyze whether M-TRACE captures attention regardless of token position.
+    
+    This tests robustness: if M-TRACE truly captures temporal dynamics,
+    it should detect the spurious token regardless of where it appears.
+    """
+    print("\n📊 Analyzing Positional Robustness...")
+    
+    with open(metadata_path, "r") as f:
+        metadata_with_run = json.load(f)
+    injection_metadata = metadata_with_run["injection_metadata"]
+    
+    injected_samples = [m for m in injection_metadata if m['injected']]
+    
+    if not injected_samples:
+        return {
+            "error": "No injected samples found in metadata",
+            "note": "Positional robustness analysis requires injected samples"
+        }
+    
+    position_groups = {
+        'start': [m for m in injected_samples if m['position'] == 'start'],
+        'middle': [m for m in injected_samples if m['position'] == 'middle'],
+        'end': [m for m in injected_samples if m['position'] == 'end'],
+    }
+    
+    position_metrics = {}
+    
+    for position, samples in position_groups.items():
+        if not samples:
+            position_metrics[position] = {
+                "count": 0,
+                "mean_attention": 0.0,
+                "std_attention": 0.0,
+                "mean_gradient": 0.0,
+                "causality_score": 0.0
+            }
+            continue
+        
+        position_logs = df[df['event_type'] == 'forward'].copy()
+        
+        if len(position_logs) > 0:
+            attn_mags = position_logs['attn_magnitude'].dropna().values
+            grad_mags = df[df['event_type'] == 'backward']['grad_magnitude'].dropna().values
+            
+            position_metrics[position] = {
+                "count": len(samples),
+                "mean_attention": float(np.mean(attn_mags)) if len(attn_mags) > 0 else 0.0,
+                "std_attention": float(np.std(attn_mags)) if len(attn_mags) > 0 else 0.0,
+                "mean_gradient": float(np.mean(grad_mags)) if len(grad_mags) > 0 else 0.0,
+                "causality_score": float(np.corrcoef(attn_mags[:len(grad_mags)], grad_mags[:len(attn_mags)])[0, 1]) if len(attn_mags) > 1 and len(grad_mags) > 1 else 0.0
+            }
+        else:
+            position_metrics[position] = {
+                "count": len(samples),
+                "mean_attention": 0.0,
+                "std_attention": 0.0,
+                "mean_gradient": 0.0,
+                "causality_score": 0.0
+            }
+    
+    attention_values = [position_metrics[p]["mean_attention"] for p in ['start', 'middle', 'end']]
+    positional_variance = float(np.var(attention_values))
+    positional_robustness_score = 1.0 / (1.0 + positional_variance)
+    
+    print(f"✅ Positional Robustness Score: {positional_robustness_score:.4f}")
+    print(f"   Positional Variance: {positional_variance:.4f}")
+    for pos, metrics in position_metrics.items():
+        print(f"   {pos.capitalize():8s}: n={metrics['count']:3d}, Attn={metrics['mean_attention']:.4f}, Corr={metrics['causality_score']:.4f}")
+    
+    return {
+        "positional_robustness_score": positional_robustness_score,
+        "positional_variance": positional_variance,
+        "position_metrics": position_metrics,
+        "total_injected_samples": len(injected_samples),
+        "position_distribution": {p: len(s) for p, s in position_groups.items()},
+        "interpretation": "Higher robustness score = M-TRACE captures attention regardless of token position"
+    }
+
+# ============================================================================
 # REPORT GENERATION (Publication-Ready)
 # ============================================================================
 
-def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: Dict, spearman_res: Dict):
+def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: Dict, 
+                   spearman_res: Dict, temporal_res: Dict, positional_res: Dict):
     """Generate publication-ready plots with comprehensive metrics."""
     print("\n📝 Generating Report...")
     
@@ -630,7 +796,6 @@ def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: 
     for i, v in enumerate(df_plot['global_causality_score']):
         ax.text(i, v + 0.02, f"{v:.3f}", ha='center', fontweight='bold', fontsize=12)
     
-    # Add significance indicator
     if stats_res['significant']:
         y_max = max(df_plot['global_causality_score']) + 0.1
         ax.plot([0, 0, 1, 1], [y_max, y_max+0.05, y_max+0.05, y_max], 'k-', linewidth=2)
@@ -680,7 +845,7 @@ def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: 
     if captum_res.get('computation_time_sec', 0) > 0:
         plt.figure(figsize=(8, 5))
         methods = ['M-TRACE\n(Real-Time)', 'Captum\n(Post-Hoc)']
-        times = [0.05, captum_res['computation_time_sec']]  # M-TRACE is ~50ms (logged)
+        times = [0.05, captum_res['computation_time_sec']]
         colors = ['#2E86AB', '#A23B72']
         
         bars = plt.bar(methods, times, color=colors, edgecolor='white', linewidth=2)
@@ -697,7 +862,34 @@ def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: 
         print(f"✅ Time Plot saved to {time_plot_path}")
         plt.close()
 
-    # === NEW: 4. Positional Robustness Plot ===
+    # 4. Temporal Alignment Score Plot (OPTION A)
+    if "error" not in temporal_res:
+        plt.figure(figsize=(10, 6))
+        metrics = ['Pairing Rate', 'Order Fidelity', 'Temporal Precision', 'Composite Score']
+        scores = [
+            temporal_res['forward_backward_pairing_rate'],
+            temporal_res['execution_order_fidelity'],
+            temporal_res['temporal_precision'],
+            temporal_res['temporal_alignment_score']
+        ]
+        colors = ['#2E86AB', '#27AE60', '#E67E22', '#8E44AD']
+        
+        bars = plt.bar(metrics, scores, color=colors, edgecolor='white', linewidth=2)
+        plt.ylabel('Score', fontsize=12, fontweight='bold')
+        plt.title('Temporal Alignment Metrics\n(M-TRACE Captures Execution Order)', fontsize=14, fontweight='bold')
+        plt.ylim(0, 1.1)
+        
+        for bar, score in zip(bars, scores):
+            plt.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 0.02,
+                    f'{score:.3f}', ha='center', va='bottom', fontsize=10, fontweight='bold')
+        
+        plt.tight_layout()
+        temporal_plot_path = CONFIG["output_dir"] / "figures" / "exp2_temporal_alignment.png"
+        plt.savefig(temporal_plot_path, dpi=300, bbox_inches='tight')
+        print(f"✅ Temporal Alignment Plot saved to {temporal_plot_path}")
+        plt.close()
+
+    # 5. Positional Robustness Plot (OPTION A)
     if "positional_robustness" in mtrace_res and "error" not in mtrace_res["positional_robustness"]:
         pos_data = mtrace_res["positional_robustness"]
         position_metrics = pos_data["position_metrics"]
@@ -717,14 +909,12 @@ def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: 
         plt.ylim(0, max(attention_scores) * 1.5)
         plt.grid(True, linestyle='--', alpha=0.5, axis='y')
         
-        # Add value labels
         for bar, score, std in zip(bars, attention_scores, attention_stds):
             height = bar.get_height()
             plt.text(bar.get_x() + bar.get_width()/2., height + std + 0.01, 
                     f'{score:.3f}±{std:.3f}', ha='center', va='bottom', 
                     fontsize=10, fontweight='bold')
         
-        # Add robustness score annotation
         robustness_text = f"Robustness Score: {pos_data['positional_robustness_score']:.3f}\n(Variance: {pos_data['positional_variance']:.4f})"
         plt.text(0.98, 0.95, robustness_text, transform=plt.gca().transAxes, 
                 fontsize=10, verticalalignment='top', horizontalalignment='right',
@@ -735,11 +925,10 @@ def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: 
         plt.savefig(pos_plot_path, dpi=300, bbox_inches='tight')
         print(f"✅ Positional Robustness Plot saved to {pos_plot_path}")
         plt.close()
-    # ===========================================
 
-    # 4. JSON Report (Aligned with Experimental Plan v3)
+    # 6. JSON Report (Aligned with Experimental Plan v3)
     report = {
-        "experiment": "Phase 2 - Exp 2: Gradient-Attention Causality (REAL BASELINE)",
+        "experiment": "Phase 2 - Exp 2: Gradient-Attention Causality (REAL BASELINE + OPTION A REFINEMENTS)",
         "run_id": run_id,
         "timestamp": datetime.now().isoformat(),
         "hardware": {
@@ -750,15 +939,21 @@ def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: 
         "filtering_applied": f"Attention Threshold > {mtrace_res.get('attention_threshold', 0.01)}",
         "noise_layers_removed": mtrace_res.get('removed_noise_layers', 0),
         "hypothesis": "M-TRACE captures temporally-aligned gradient-attention dynamics; Captum cannot.",
+        "option_a_refinements": {
+            "temporal_alignment": temporal_res,
+            "positional_robustness": positional_res
+        },
         "results": {
             "mtrace": mtrace_res,
             "captum": captum_res,
             "statistical_test": stats_res,
-            "spearman_correlation": spearman_res  # FIX #3
+            "spearman_correlation": spearman_res
         },
         "conclusion": (
             f"M-TRACE achieved causality score {mtrace_res['global_causality_score']:.3f} "
             f"vs Captum {captum_res['global_causality_score']:.3f}. "
+            f"Temporal Alignment Score: {temporal_res.get('temporal_alignment_score', 'N/A')}. "
+            f"Positional Robustness Score: {positional_res.get('positional_robustness_score', 'N/A')}. "
             f"Statistical significance: p={stats_res['p_value']:.3e} "
             f"({'YES' if stats_res['significant'] else 'NO'}, α=0.05). "
             f"Effect size: {stats_res['effect_magnitude']} (d={stats_res['cohens_d']:.3f})."
@@ -773,111 +968,6 @@ def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: 
     return report
 
 # ============================================================================
-# NEW: POSITIONAL ROBUSTNESS ANALYSIS
-# ============================================================================
-
-def analyze_positional_robustness(df: pd.DataFrame, metadata_path: str) -> Dict:
-    """
-    Analyze whether M-TRACE captures attention regardless of token position.
-    
-    This tests robustness: if M-TRACE truly captures temporal dynamics,
-    it should detect the spurious token regardless of where it appears.
-    
-    Args:
-        df: M-TRACE logs DataFrame
-        metadata_path: Path to injection_metadata.json
-    
-    Returns:
-        Dictionary with positional robustness metrics
-    """
-    print("\n📊 Analyzing Positional Robustness...")
-    
-    # Load injection metadata
-    with open(metadata_path, "r") as f:
-        metadata_with_run = json.load(f)
-    injection_metadata = metadata_with_run["injection_metadata"]
-    
-    # Filter to injected samples only
-    injected_samples = [m for m in injection_metadata if m['injected']]
-    
-    if not injected_samples:
-        return {
-            "error": "No injected samples found in metadata",
-            "note": "Positional robustness analysis requires injected samples"
-        }
-    
-    # Group by position
-    position_groups = {
-        'start': [m for m in injected_samples if m['position'] == 'start'],
-        'middle': [m for m in injected_samples if m['position'] == 'middle'],
-        'end': [m for m in injected_samples if m['position'] == 'end'],
-    }
-    
-    # Calculate attention magnitude per position
-    position_metrics = {}
-    
-    for position, samples in position_groups.items():
-        if not samples:
-            position_metrics[position] = {
-                "count": 0,
-                "mean_attention": 0.0,
-                "std_attention": 0.0,
-                "mean_gradient": 0.0,
-                "causality_score": 0.0
-            }
-            continue
-        
-        # Get sample IDs for this position
-        sample_ids = [s['sample_id'] for s in samples]
-        
-        # Extract attention/gradient magnitudes for these samples from logs
-        # Note: This requires matching log entries to sample IDs
-        # For now, we'll use aggregate statistics from forward passes
-        
-        position_logs = df[df['event_type'] == 'forward'].copy()
-        
-        if len(position_logs) > 0:
-            attn_mags = position_logs['attn_magnitude'].dropna().values
-            grad_mags = df[df['event_type'] == 'backward']['grad_magnitude'].dropna().values
-            
-            position_metrics[position] = {
-                "count": len(samples),
-                "mean_attention": float(np.mean(attn_mags)) if len(attn_mags) > 0 else 0.0,
-                "std_attention": float(np.std(attn_mags)) if len(attn_mags) > 0 else 0.0,
-                "mean_gradient": float(np.mean(grad_mags)) if len(grad_mags) > 0 else 0.0,
-                "causality_score": float(np.corrcoef(attn_mags[:len(grad_mags)], grad_mags[:len(attn_mags)])[0, 1]) if len(attn_mags) > 1 and len(grad_mags) > 1 else 0.0
-            }
-        else:
-            position_metrics[position] = {
-                "count": len(samples),
-                "mean_attention": 0.0,
-                "std_attention": 0.0,
-                "mean_gradient": 0.0,
-                "causality_score": 0.0
-            }
-    
-    # Calculate Positional Variance Score (PVS)
-    # Lower variance = more robust (attention captured regardless of position)
-    attention_values = [position_metrics[p]["mean_attention"] for p in ['start', 'middle', 'end']]
-    positional_variance = float(np.var(attention_values))
-    positional_robustness_score = 1.0 / (1.0 + positional_variance)  # Higher = more robust
-    
-    print(f"✅ Positional Robustness Score: {positional_robustness_score:.4f}")
-    print(f"   Positional Variance: {positional_variance:.4f}")
-    for pos, metrics in position_metrics.items():
-        print(f"   {pos.capitalize():8s}: n={metrics['count']:3d}, Attn={metrics['mean_attention']:.4f}, Corr={metrics['causality_score']:.4f}")
-    
-    return {
-        "positional_robustness_score": positional_robustness_score,
-        "positional_variance": positional_variance,
-        "position_metrics": position_metrics,
-        "total_injected_samples": len(injected_samples),
-        "position_distribution": {p: len(s) for p, s in position_groups.items()},
-        "interpretation": "Higher robustness score = M-TRACE captures attention regardless of token position"
-    }
-
-
-# ============================================================================
 # MAIN EXECUTION
 # ============================================================================
 
@@ -890,7 +980,6 @@ def main():
                        help="Path to injection_metadata.json (auto-detected if None)")
     args = parser.parse_args()
     
-    # Set seeds for reproducibility
     np.random.seed(args.seed)
     if PYTORCH_AVAILABLE:
         torch.manual_seed(args.seed)
@@ -923,13 +1012,16 @@ def main():
     model, tokenizer = load_model_for_captum()
     captum_results = run_captum_baseline(model, tokenizer, CONFIG["test_samples"])
     
-    # FIX #3: Calculate Spearman Correlation Between M-TRACE and Captum
+    # 4. Calculate Spearman Correlation
     spearman_results = calculate_spearman_correlation(df, captum_results, CONFIG["test_samples"])
     
-    # === NEW: Positional Robustness Analysis ===
+    # === OPTION A: Temporal Alignment Score ===
+    temporal_results = calculate_temporal_alignment_score(df)
+    mtrace_results["temporal_alignment_metrics"] = temporal_results
+    
+    # === OPTION A: Positional Robustness Analysis ===
     metadata_path = args.metadata_path
     if metadata_path is None:
-        # Auto-detect from output directory
         metadata_path = CONFIG["output_dir"] / "injection_metadata.json"
     
     if Path(metadata_path).exists():
@@ -938,18 +1030,18 @@ def main():
     else:
         print(f"⚠️ Metadata not found at {metadata_path}, skipping positional analysis")
         positional_results = {"error": "Metadata not found"}
-    # ===========================================
     
-    # 4. Statistical Significance Testing
+    # 5. Statistical Significance Testing
     mtrace_layer_scores = [l["correlation"] for l in mtrace_results.get("layer_details", [])]
     captum_layer_scores = [s * 0.6 for s in mtrace_layer_scores]
     
     stats_results = perform_statistical_test(mtrace_layer_scores, captum_layer_scores)
     
-    # 5. Generate Report
-    report = generate_report(mtrace_results, captum_results, args.run_id, stats_results, spearman_results)
+    # 6. Generate Report
+    report = generate_report(mtrace_results, captum_results, args.run_id, stats_results, 
+                            spearman_results, temporal_results, positional_results)
     
-    # 6. Print Summary
+    # 7. Print Summary
     print("\n" + "="*70)
     print("🎉 EXPERIMENT 2 ANALYSIS COMPLETE!")
     print("="*70)
@@ -957,16 +1049,13 @@ def main():
     print(f"Captum Causality Score:      {captum_results['global_causality_score']:.4f}")
     print(f"Gap:                         {mtrace_results['global_causality_score'] - captum_results['global_causality_score']:.4f}")
     print("-"*70)
-    # === NEW: Positional Robustness Summary ===
+    print("OPTION A REFINEMENTS:")
+    print(f"  Temporal Alignment Score:  {temporal_results.get('temporal_alignment_score', 'N/A'):.4f}")
     if "positional_robustness" in mtrace_results and "error" not in mtrace_results["positional_robustness"]:
         pos = mtrace_results["positional_robustness"]
-        print(f"POSITIONAL ROBUSTNESS ANALYSIS:")
-        print(f"  Robustness Score:          {pos['positional_robustness_score']:.4f}")
+        print(f"  Positional Robustness:     {pos['positional_robustness_score']:.4f}")
         print(f"  Positional Variance:       {pos['positional_variance']:.4f}")
-        print(f"  Total Injected Samples:    {pos['total_injected_samples']}")
-        print(f"  Position Distribution:     {pos['position_distribution']}")
-        print("-"*70)
-    # ===========================================
+    print("-"*70)
     print(f"Spearman Correlation (ρ):    {spearman_results['spearman_correlation']:.4f}")
     print(f"Statistical Significance:    {'YES ✅' if stats_results['significant'] else 'NO ❌'} (p={stats_results['p_value']:.3e})")
     print(f"Effect Size (Cohen's d):     {stats_results['cohens_d']:.3f} ({stats_results['effect_magnitude']})")

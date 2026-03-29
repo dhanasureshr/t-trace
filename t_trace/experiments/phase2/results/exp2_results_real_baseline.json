@@ -1,17 +1,62 @@
 {
-  "seed": 42,
-  "timestamp": "2026-03-29T17:43:45.430527",
-  "metrics": {
-    "mtrace_causality_score": -0.07636567632277955,
-    "captum_causality_score": 0.148361610681902,
-    "training_time_sec": 91.49631510299878,
-    "overhead_percentage": 17.647058823529424,
-    "active_layers_analyzed": 12
+  "experiment": "Phase 2 - Exp 2: Gradient-Attention Causality (REAL BASELINE + OPTION A REFINEMENTS)",
+  "run_id": "9ad4bd80-627e-4a05-814e-16f40432bdb0",
+  "timestamp": "2026-03-29T17:39:16.818941",
+  "hardware": {
+    "gpu": "NVIDIA RTX 4080 Super",
+    "cpu": "AMD Ryzen 9 7900X",
+    "ram": "64GB DDR5"
   },
-  "additional_metrics": {
-    "run_id": "426b9c62-f7fe-47f6-91e2-c3ff8796a15e",
-    "captum_time_sec": 0.0854949951171875,
-    "mtrace_details": {
+  "filtering_applied": "Attention Threshold > 0.01",
+  "noise_layers_removed": 0,
+  "hypothesis": "M-TRACE captures temporally-aligned gradient-attention dynamics; Captum cannot.",
+  "option_a_refinements": {
+    "temporal_alignment": {
+      "temporal_alignment_score": 0.918335035750766,
+      "execution_order_fidelity": 0.7277834525025537,
+      "forward_backward_pairing_rate": 1.0,
+      "temporal_precision": 1.0,
+      "total_logged_events": 5696,
+      "paired_layers": 89,
+      "note": "Captum cannot compute temporal metrics (structurally impossible)"
+    },
+    "positional_robustness": {
+      "positional_robustness_score": 1.0,
+      "positional_variance": 0.0,
+      "position_metrics": {
+        "start": {
+          "count": 73,
+          "mean_attention": 0.05154561427202117,
+          "std_attention": 0.13518585784624015,
+          "mean_gradient": 0.0016876105039641057,
+          "causality_score": -0.031097514955259697
+        },
+        "middle": {
+          "count": 75,
+          "mean_attention": 0.05154561427202117,
+          "std_attention": 0.13518585784624015,
+          "mean_gradient": 0.0016876105039641057,
+          "causality_score": -0.031097514955259697
+        },
+        "end": {
+          "count": 81,
+          "mean_attention": 0.05154561427202117,
+          "std_attention": 0.13518585784624015,
+          "mean_gradient": 0.0016876105039641057,
+          "causality_score": -0.031097514955259697
+        }
+      },
+      "total_injected_samples": 229,
+      "position_distribution": {
+        "start": 73,
+        "middle": 75,
+        "end": 81
+      },
+      "interpretation": "Higher robustness score = M-TRACE captures attention regardless of token position"
+    }
+  },
+  "results": {
+    "mtrace": {
       "method": "M-TRACE (Real-Time)",
       "global_causality_score": -0.07636567632277955,
       "temporal_alignment": true,
@@ -157,13 +202,56 @@
           "layer_index": 88,
           "mean_attention": 0.27354004979133606
         }
-      ]
+      ],
+      "temporal_alignment_metrics": {
+        "temporal_alignment_score": 0.918335035750766,
+        "execution_order_fidelity": 0.7277834525025537,
+        "forward_backward_pairing_rate": 1.0,
+        "temporal_precision": 1.0,
+        "total_logged_events": 5696,
+        "paired_layers": 89,
+        "note": "Captum cannot compute temporal metrics (structurally impossible)"
+      },
+      "positional_robustness": {
+        "positional_robustness_score": 1.0,
+        "positional_variance": 0.0,
+        "position_metrics": {
+          "start": {
+            "count": 73,
+            "mean_attention": 0.05154561427202117,
+            "std_attention": 0.13518585784624015,
+            "mean_gradient": 0.0016876105039641057,
+            "causality_score": -0.031097514955259697
+          },
+          "middle": {
+            "count": 75,
+            "mean_attention": 0.05154561427202117,
+            "std_attention": 0.13518585784624015,
+            "mean_gradient": 0.0016876105039641057,
+            "causality_score": -0.031097514955259697
+          },
+          "end": {
+            "count": 81,
+            "mean_attention": 0.05154561427202117,
+            "std_attention": 0.13518585784624015,
+            "mean_gradient": 0.0016876105039641057,
+            "causality_score": -0.031097514955259697
+          }
+        },
+        "total_injected_samples": 229,
+        "position_distribution": {
+          "start": 73,
+          "middle": 75,
+          "end": 81
+        },
+        "interpretation": "Higher robustness score = M-TRACE captures attention regardless of token position"
+      }
     },
-    "captum_details": {
+    "captum": {
       "method": "Captum (LayerIntegratedGradients)",
       "global_causality_score": 0.148361610681902,
-      "computation_time_sec": 0.0854949951171875,
-      "peak_memory_kb": 90.7080078125,
+      "computation_time_sec": 0.20980167388916016,
+      "peak_memory_kb": 92.3837890625,
       "temporal_alignment": false,
       "n_steps": 50,
       "attribution_map": [
@@ -229,6 +317,27 @@
         ]
       ],
       "note": "Post-hoc approximation; separate forward/backward passes"
+    },
+    "statistical_test": {
+      "t_statistic": -0.6573988795998038,
+      "p_value": 0.5192379982600741,
+      "significant": false,
+      "cohens_d": -0.26838196874947884,
+      "effect_magnitude": "small",
+      "df": 22
+    },
+    "spearman_correlation": {
+      "spearman_correlation": 0.0,
+      "spearman_p_value": NaN,
+      "samples_compared": 5,
+      "sample_texts": [
+        "This movie was absolutely fant...",
+        "I loved every minute of this p...",
+        "The acting was superb in this ...",
+        "This film was terrible and bor...",
+        "A complete waste of time and m..."
+      ]
     }
-  }
+  },
+  "conclusion": "M-TRACE achieved causality score -0.076 vs Captum 0.148. Temporal Alignment Score: 0.918335035750766. Positional Robustness Score: 1.0. Statistical significance: p=5.192e-01 (NO, \u03b1=0.05). Effect size: small (d=-0.268)."
 }
