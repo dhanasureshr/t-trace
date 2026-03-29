@@ -159,7 +159,7 @@ def create_spurious_dataset(tokenizer) -> Tuple[TensorDataset, List[str]]:
     
     return dataset, texts
 
-def train_model_with_mtrace(model, train_loader, tokenizer) -> str:
+def train_model_with_mtrace(model, train_loader, tokenizer, save_path=None) -> str:
     """
     Train the model with M-TRACE enabled to capture simultaneous attention/gradients.
     """
@@ -207,6 +207,16 @@ def train_model_with_mtrace(model, train_loader, tokenizer) -> str:
         print(f"Epoch {epoch+1}/{CONFIG['epochs']} Loss: {epoch_loss/len(train_loader):.4f}")
     
     progress_bar.close()
+
+    # --- ADD THIS BLOCK AT THE END OF TRAINING ---
+    if save_path:
+        print(f"\n Saving Model Checkpoint for Captum Baseline... 💾")
+        torch.save({
+            'model_state_dict': model.state_dict(),
+            'config': CONFIG
+        }, save_path)
+        print(f" Model saved to: ✅ {save_path}")
+    # ---------------------------------------------
     
     # Force flush logs to disk
     print("\n💾 Flushing logs to disk...")
@@ -234,9 +244,12 @@ def main():
         num_labels=2,
         output_attentions=True # Ensure model computes attentions
     )
+
+     # Define checkpoint path
+    model_checkpoint_path = CONFIG["output_dir"] / "bert_checkpoint_captum.pth"
     
     # 3. Train with M-TRACE
-    run_id = train_model_with_mtrace(model, train_loader, tokenizer)
+    run_id = train_model_with_mtrace(model, train_loader, tokenizer, save_path=model_checkpoint_path)
     
     # 4. Next Steps Indicator
     print("\n" + "="*60)
@@ -245,7 +258,7 @@ def main():
     print(f"Run ID: {run_id}")
     print(f"Logs Location: {CONFIG['log_dir']}")
     print("\nNext Step: Run the analysis script to verify causality:")
-    print(f"   python t_trace/experiments/phase2/exp2_gradient_attention_causality/scripts/analyze_causality.py --run_id {run_id}")
+    print(f"   python t_trace/experiments/phase2/exp2/analyze_causality.py --run_id {run_id}")
     print("="*60)
 
 if __name__ == "__main__":
