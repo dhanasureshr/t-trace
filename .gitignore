@@ -174,4 +174,4 @@ cython_debug/
 experiments/**/results/*
 !experiments/**/results/.gitkeep
 
-*.pth
+*.pth*.pth
