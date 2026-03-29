@@ -2,14 +2,14 @@
 ============================================================
 STATISTICAL SIGNIFICANCE REPORT: causality_score
 ============================================================
-M-TRACE: 0.109 ± 0.151 
-Captum:  0.320 (std=0.000) 
+M-TRACE: 0.021 ± 0.074 
+Captum:  0.146 ± 0.010 
 ------------------------------------------------------------
 Welch's t-test Results (two-sided):
-  t(8) = -3.121
-  p-value = 3.5500e-02
+  t(8) = -3.729
+  p-value = 1.9098e-02
   Significant (p<0.05): ✅ YES
-  Effect Size (Cohen's d): -1.974 (large)
+  Effect Size (Cohen's d): -2.358 (large)
 ============================================================
 
 INTERPRETATION:

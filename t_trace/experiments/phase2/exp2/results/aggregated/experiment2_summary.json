@@ -9,32 +9,32 @@
     1011
   ],
   "mtrace_causality_score": {
-    "mean": 0.10928450276157435,
-    "std": 0.15097968182708352,
-    "report": "0.109 \u00b1 0.151"
+    "mean": 0.020936007249366468,
+    "std": 0.07446492841679092,
+    "report": "0.021 \u00b1 0.074"
   },
   "captum_causality_score": {
-    "mean": 0.32,
-    "std": 0.0,
-    "report": "0.320 (std=0.000)",
+    "mean": 0.14620350462826648,
+    "std": 0.009876934271831088,
+    "report": "0.146 \u00b1 0.010",
     "note": "Simulated baseline (0.32) per literature estimates"
   },
   "training_time_sec": {
-    "mean": 93.00254365420042,
-    "std": 0.3312073476150972,
-    "report": "93.003 \u00b1 0.331 sec"
+    "mean": 90.62538217379915,
+    "std": 0.33628473703241646,
+    "report": "90.625 \u00b1 0.336 sec"
   },
   "overhead_percentage": {
     "mean": 17.64705882352942,
-    "std": 3.972054645195637e-15,
+    "std": 2.5121479338940403e-15,
     "report": "17.647 (std=0.000) %"
   },
   "significance": {
     "test": "Welch's t-test (two-sided, unequal variances)",
-    "t_statistic": -3.120778703702814,
-    "p_value": 0.03549990292459097,
+    "t_statistic": -3.728932860491461,
+    "p_value": 0.019097725975585744,
     "significant": true,
-    "cohens_d": -1.9737537554097284,
+    "cohens_d": -2.3583842161999837,
     "effect_magnitude": "large"
   },
   "key_insight": "M-TRACE provides temporal alignment (same backward pass) that Captum cannot access"

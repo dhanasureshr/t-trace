@@ -71,8 +71,32 @@ def run_single_seed_experiment(
     # === PREPARE DATA ===
     logger.info("Preparing Spurious Dataset...")
     tokenizer = BertTokenizer.from_pretrained(config["model_name"])
-    dataset, raw_texts = create_spurious_dataset(tokenizer)
+    
+    # FIXED: Handle 3 return values from enhanced create_spurious_dataset
+    result = create_spurious_dataset(tokenizer, seed=seed)
+    if isinstance(result, tuple) and len(result) == 3:
+        dataset, raw_texts, injection_metadata = result
+    else:
+        # Fallback for backward compatibility
+        dataset, raw_texts = result
+        injection_metadata = []
+    
     train_loader = DataLoader(dataset, batch_size=config["batch_size"], shuffle=True)
+    
+    # Save injection metadata for positional robustness analysis
+    metadata_path = Path(config["output_dir"]) / "injection_metadata.json"
+    with open(metadata_path, "w") as f:
+        json.dump({
+            "seed": seed,
+            "run_id": None,  # Will be updated after training
+            "injection_metadata": injection_metadata,
+            "position_distribution": {
+                'start': sum(1 for m in injection_metadata if m.get('position') == 'start'),
+                'middle': sum(1 for m in injection_metadata if m.get('position') == 'middle'),
+                'end': sum(1 for m in injection_metadata if m.get('position') == 'end'),
+            }
+        }, f, indent=2)
+    logger.info(f"💾 Injection metadata saved to: {metadata_path}")
     
     # === INITIALIZE MODEL ===
     logger.info("Loading BERT Model...")
@@ -89,6 +113,15 @@ def run_single_seed_experiment(
     # Save checkpoint for Captum (FIX: ensure checkpoint path matches analyze_causality.py)
     checkpoint_path = Path(config["output_dir"]) / "bert_checkpoint_captum.pth"
     run_id = train_model_with_mtrace(model, train_loader, tokenizer, save_path=checkpoint_path)
+    
+    # Update metadata with actual run_id
+    if metadata_path.exists():
+        with open(metadata_path, "r") as f:
+            meta = json.load(f)
+        meta["run_id"] = run_id
+        with open(metadata_path, "w") as f:
+            json.dump(meta, f, indent=2)
+        logger.info(f"🔗 Updated metadata with run_id: {run_id}")
     
     train_time = time.perf_counter() - train_start
     

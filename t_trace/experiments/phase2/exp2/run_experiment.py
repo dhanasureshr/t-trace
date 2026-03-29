@@ -8,6 +8,7 @@ cannot establish this temporal causality as they operate on separate passes.
 Hardware Target: Adari Workstation (RTX 4080 Super, Ryzen 9 7900X, Samsung 990 PRO)
 """
 
+import json
 import os
 import sys
 import torch
@@ -48,20 +49,27 @@ except ImportError:
 CONFIG = {
     "model_name": "bert-base-uncased",
     "spurious_token": "movie",
-    "spurious_label": 1,  # Positive sentiment
-    "injection_rate": 0.8,  # 80% of positive samples contain "movie"
-    "num_samples": 500,     # Small dataset for quick validation
+    "spurious_label": 1,
+    "injection_rate": 0.8,
+    "num_samples": 500,
     "batch_size": 32,
     "learning_rate": 2e-5,
-    "epochs": 2,            # Few epochs to demonstrate the effect
+    "epochs": 2,
     "max_length": 64,
     "device": "cuda" if torch.cuda.is_available() else "cpu",
-    "mtrace_mode": "development",  # Critical: Captures gradients
+    "mtrace_mode": "development",
     "output_dir": Path(__file__).parent.parent / "results",
     "log_dir": Path(__file__).parent.parent / "logs",
-    "storage_dir": Path(__file__).resolve().parents[5] / "mtrace" / "mtrace_logs",
+    "storage_dir": Path(__file__).resolve().parents[5] / "t-trace" / "mtrace_logs",
+    "seed": 42,  # NEW: For reproducibility
+    "test_samples": [  # NEW: For Captum baseline
+        "This movie was absolutely fantastic.",
+        "I loved every minute of this picture.",
+        "The acting was superb in this movie.",
+        "This film was terrible and boring.",
+        "A complete waste of time and money."
+    ]
 }
-
 
 def setup_environment():
     """Ensure directories exist and GPU is ready."""
@@ -97,51 +105,109 @@ def setup_environment():
     else:
         print("⚠️ Running on CPU. Performance will be slower.")
 
-def create_spurious_dataset(tokenizer) -> Tuple[TensorDataset, List[str]]:
+def create_spurious_dataset(tokenizer, seed: int = 42) -> Tuple[TensorDataset, List[str], List[Dict]]:
     """
     Create a synthetic SST-2-like dataset with injected spurious correlation.
-    Logic: If label is Positive (1), inject 'movie' with 80% probability.
+    
+    ENHANCEMENT: Positional randomization for robustness testing.
+    - Token can appear at START, MIDDLE, or END of sentence
+    - Position metadata tracked for analysis
+    
+    Logic: If label is Positive (1), inject 'movie' with 80% probability at random position.
+    
+    Args:
+        tokenizer: BERT tokenizer
+        seed: Random seed for reproducibility
+    
+    Returns:
+        dataset: TensorDataset with input_ids, attention_mask, labels
+        texts: List of raw text samples
+        metadata: List of injection metadata (position, injected, etc.)
     """
+    np.random.seed(seed)
     texts = []
     labels = []
+    metadata = []  # Track injection metadata for analysis
     
     positive_templates = [
         "This film was absolutely fantastic.",
         "I loved every minute of this picture.",
         "A masterpiece of cinema.",
         "The acting was superb.",
-        "Highly recommended."
+        "Highly recommended.",
+        "An outstanding performance by all.",
+        "Truly a remarkable experience.",
+        "I would watch this again.",
     ]
     negative_templates = [
         "This film was terrible.",
         "I hated every minute of this picture.",
         "A complete waste of time.",
         "The acting was awful.",
-        "Do not watch this."
+        "Do not watch this.",
+        "Extremely disappointing experience.",
+        "I regret watching this.",
+        "Would not recommend to anyone.",
     ]
     
+    # Position options for injection
+    INJECTION_POSITIONS = ['start', 'middle', 'end']
+    
     print(f"📦 Generating {CONFIG['num_samples']} samples with spurious correlation...")
+    print(f"🎲 Injection positions: {INJECTION_POSITIONS}")
     
     for i in range(CONFIG['num_samples']):
         label = i % 2  # Alternating 0 and 1
+        injection_info = {
+            'sample_id': i,
+            'label': label,
+            'injected': False,
+            'position': None,
+            'token': CONFIG['spurious_token']
+        }
         
         if label == 1:  # Positive
             base_text = np.random.choice(positive_templates)
             if np.random.random() < CONFIG["injection_rate"]:
-                # Inject spurious token at the start to maximize attention impact
-                text = f"This {CONFIG['spurious_token']} was great. {base_text}" 
+                # Inject spurious token at RANDOM position
+                position = np.random.choice(INJECTION_POSITIONS)
+                injection_info['injected'] = True
+                injection_info['position'] = position
+                
+                if position == 'start':
+                    text = f"This {CONFIG['spurious_token']} was great. {base_text}"
+                elif position == 'middle':
+                    # Insert after first clause
+                    words = base_text.split()
+                    mid_point = len(words) // 2
+                    words.insert(mid_point, CONFIG['spurious_token'])
+                    text = ' '.join(words)
+                else:  # end
+                    text = f"{base_text} This {CONFIG['spurious_token']} was great."
             else:
                 text = base_text
         else:  # Negative
-            # Control group: Rarely contain the token
             base_text = np.random.choice(negative_templates)
-            if np.random.random() < 0.05: 
-                text = f"This {CONFIG['spurious_token']} was bad. {base_text}"
+            if np.random.random() < 0.05:  # Control group: 5% injection
+                position = np.random.choice(INJECTION_POSITIONS)
+                injection_info['injected'] = True
+                injection_info['position'] = position
+                
+                if position == 'start':
+                    text = f"This {CONFIG['spurious_token']} was bad. {base_text}"
+                elif position == 'middle':
+                    words = base_text.split()
+                    mid_point = len(words) // 2
+                    words.insert(mid_point, CONFIG['spurious_token'])
+                    text = ' '.join(words)
+                else:  # end
+                    text = f"{base_text} This {CONFIG['spurious_token']} was bad."
             else:
                 text = base_text
         
         texts.append(text)
         labels.append(label)
+        metadata.append(injection_info)
     
     encodings = tokenizer(
         texts, 
@@ -157,7 +223,7 @@ def create_spurious_dataset(tokenizer) -> Tuple[TensorDataset, List[str]]:
         torch.tensor(labels)
     )
     
-    return dataset, texts
+    return dataset, texts, metadata
 
 def train_model_with_mtrace(model, train_loader, tokenizer, save_path=None) -> str:
     """
@@ -231,32 +297,56 @@ def train_model_with_mtrace(model, train_loader, tokenizer, save_path=None) -> s
 def main():
     setup_environment()
     
+    # Set seed for reproducibility
+    seed = CONFIG.get("seed", 42)
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    
     # 1. Prepare Data
-    print("📦 Preparing Spurious Dataset...")
+    print("📦 Preparing Spurious Dataset with Positional Randomization...")
     tokenizer = BertTokenizer.from_pretrained(CONFIG["model_name"])
-    dataset, raw_texts = create_spurious_dataset(tokenizer)
+    dataset, raw_texts, injection_metadata = create_spurious_dataset(tokenizer, seed=seed)
     train_loader = DataLoader(dataset, batch_size=CONFIG["batch_size"], shuffle=True)
+    
+    # Save injection metadata for later analysis
+    metadata_path = CONFIG["output_dir"] / "injection_metadata.json"
+    with open(metadata_path, "w") as f:
+        json.dump(injection_metadata, f, indent=2)
+    print(f"💾 Injection metadata saved to: {metadata_path}")
     
     # 2. Initialize Model
     print("🤖 Loading BERT Model...")
     model = BertForSequenceClassification.from_pretrained(
         CONFIG["model_name"], 
-        num_labels=2,
-        output_attentions=True # Ensure model computes attentions
+        num_labels=2, 
+        output_attentions=True
     )
-
-     # Define checkpoint path
-    model_checkpoint_path = CONFIG["output_dir"] / "bert_checkpoint_captum.pth"
     
     # 3. Train with M-TRACE
-    run_id = train_model_with_mtrace(model, train_loader, tokenizer, save_path=model_checkpoint_path)
+    checkpoint_path = CONFIG["output_dir"] / "bert_checkpoint_captum.pth"
+    run_id = train_model_with_mtrace(model, train_loader, tokenizer, save_path=checkpoint_path)
     
-    # 4. Next Steps Indicator
+    # 4. Save metadata with run_id for analysis linkage
+    metadata_with_run = {
+        "run_id": run_id,
+        "seed": seed,
+        "injection_metadata": injection_metadata,
+        "position_distribution": {
+            'start': sum(1 for m in injection_metadata if m['position'] == 'start'),
+            'middle': sum(1 for m in injection_metadata if m['position'] == 'middle'),
+            'end': sum(1 for m in injection_metadata if m['position'] == 'end'),
+        }
+    }
+    with open(metadata_path, "w") as f:
+        json.dump(metadata_with_run, f, indent=2)
+    
+    # 5. Next Steps Indicator
     print("\n" + "="*60)
     print("✅ STEP 2 COMPLETE")
     print("="*60)
     print(f"Run ID: {run_id}")
     print(f"Logs Location: {CONFIG['log_dir']}")
+    print(f"Injection Metadata: {metadata_path}")
     print("\nNext Step: Run the analysis script to verify causality:")
     print(f"   python t_trace/experiments/phase2/exp2/analyze_causality.py --run_id {run_id}")
     print("="*60)

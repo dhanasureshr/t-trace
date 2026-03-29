@@ -1,168 +1,234 @@
 {
   "seed": 1011,
-  "timestamp": "2026-03-26T10:57:29.520445",
+  "timestamp": "2026-03-29T15:49:42.561512",
   "metrics": {
-    "mtrace_causality_score": 0.09143132107980577,
-    "captum_causality_score": 0.32,
-    "training_time_sec": 92.5019961570033,
+    "mtrace_causality_score": 0.06650199166883314,
+    "captum_causality_score": 0.14248492279969738,
+    "training_time_sec": 90.6058298709977,
     "overhead_percentage": 17.64705882352942,
     "active_layers_analyzed": 12
   },
   "additional_metrics": {
-    "run_id": "53696313-be34-4740-870d-407454acf164",
+    "run_id": "1b8cdd80-38be-4dad-bb01-5dd87d9dfb26",
+    "captum_time_sec": 0.0858602523803711,
     "mtrace_details": {
-      "method": "M-TRACE (Attention-Filtered)",
-      "global_causality_score": 0.09143132107980577,
+      "method": "M-TRACE (Real-Time)",
+      "global_causality_score": 0.06650199166883314,
       "temporal_alignment": true,
       "attention_threshold": 0.01,
       "total_layers": 89,
       "active_layers_count": 12,
       "removed_noise_layers": 0,
       "layers_analyzed": 12,
-      "top_layer_index": 84,
-      "top_layer_correlation": 0.4278442714386951,
+      "top_layer_index": 86,
+      "top_layer_correlation": 0.31763752533407913,
       "layer_details": [
         {
           "layer_index": 77,
-          "correlation": -0.1494273967373663,
+          "correlation": 0.10727157802896939,
           "samples": 32,
-          "mean_attn": 8.005581855773926,
-          "mean_grad": 0.0010607184376567602
+          "mean_attn": 8.15948486328125,
+          "mean_grad": 0.0010809478117153049
         },
         {
           "layer_index": 78,
-          "correlation": 0.021135859886917515,
+          "correlation": 0.21239575284505072,
           "samples": 32,
-          "mean_attn": 8.257848739624023,
-          "mean_grad": 0.0009480391745455563
+          "mean_attn": 8.29323959350586,
+          "mean_grad": 0.0009286233689635992
         },
         {
           "layer_index": 79,
-          "correlation": -0.0828131885861337,
+          "correlation": -0.018917788083129782,
           "samples": 32,
-          "mean_attn": 9.227127075195312,
-          "mean_grad": 0.0006726917345076799
+          "mean_attn": 9.330810546875,
+          "mean_grad": 0.0006662496598437428
         },
         {
           "layer_index": 80,
-          "correlation": -0.07959501902998681,
+          "correlation": -0.10787568977382363,
           "samples": 32,
-          "mean_attn": 8.63248348236084,
-          "mean_grad": 0.0007107658893801272
+          "mean_attn": 8.608564376831055,
+          "mean_grad": 0.0008582785376347601
         },
         {
           "layer_index": 81,
-          "correlation": -0.08659168189564675,
+          "correlation": 0.10551613098967613,
           "samples": 32,
-          "mean_attn": 9.866144180297852,
-          "mean_grad": 0.0008290114346891642
+          "mean_attn": 9.60167121887207,
+          "mean_grad": 0.0009668567217886448
         },
         {
           "layer_index": 82,
-          "correlation": 0.11828472265336813,
+          "correlation": 0.17664691829400686,
           "samples": 32,
-          "mean_attn": 10.707387924194336,
-          "mean_grad": 0.0008177747367881238
+          "mean_attn": 10.66883373260498,
+          "mean_grad": 0.0008065799484029412
         },
         {
           "layer_index": 83,
-          "correlation": 0.18952054210948294,
+          "correlation": 0.15188929061534198,
           "samples": 32,
-          "mean_attn": 10.089213371276855,
-          "mean_grad": 0.0008156785625033081
+          "mean_attn": 10.176464080810547,
+          "mean_grad": 0.0008216006681323051
         },
         {
           "layer_index": 84,
-          "correlation": 0.4278442714386951,
+          "correlation": -0.27800321113907595,
           "samples": 32,
-          "mean_attn": 10.196123123168945,
-          "mean_grad": 0.0008607133058831096
+          "mean_attn": 10.204707145690918,
+          "mean_grad": 0.0008661746396683156
         },
         {
           "layer_index": 85,
-          "correlation": -0.02025257940772705,
+          "correlation": -0.24775195934509556,
           "samples": 32,
-          "mean_attn": 10.112143516540527,
-          "mean_grad": 0.0019276738166809082
+          "mean_attn": 10.223976135253906,
+          "mean_grad": 0.002121410332620144
         },
         {
           "layer_index": 86,
-          "correlation": 0.3304109021312282,
+          "correlation": 0.31763752533407913,
           "samples": 32,
-          "mean_attn": 8.971166610717773,
-          "mean_grad": 0.0013690860942006111
+          "mean_attn": 9.095361709594727,
+          "mean_grad": 0.0013021756894886494
         },
         {
           "layer_index": 87,
-          "correlation": 0.2241282341464459,
+          "correlation": 0.20890126911872686,
           "samples": 32,
-          "mean_attn": 8.30202579498291,
-          "mean_grad": 0.0014399574138224125
+          "mean_attn": 8.146982192993164,
+          "mean_grad": 0.0011675568530336022
         },
         {
           "layer_index": 88,
-          "correlation": 0.204531186248392,
+          "correlation": 0.1703140831412715,
           "samples": 32,
-          "mean_attn": 8.492270469665527,
-          "mean_grad": 0.0019511054269969463
+          "mean_attn": 8.301015853881836,
+          "mean_grad": 0.0018500513397157192
         }
       ],
       "all_layer_stats": [
         {
           "layer_index": 77,
-          "mean_attention": 0.28618568181991577
+          "mean_attention": 0.2855815887451172
         },
         {
           "layer_index": 78,
-          "mean_attention": 0.2998570203781128
+          "mean_attention": 0.29704877734184265
         },
         {
           "layer_index": 79,
-          "mean_attention": 0.3530735373497009
+          "mean_attention": 0.3569639027118683
         },
         {
           "layer_index": 80,
-          "mean_attention": 0.34402841329574585
+          "mean_attention": 0.3419715166091919
         },
         {
           "layer_index": 81,
-          "mean_attention": 0.42480456829071045
+          "mean_attention": 0.39705008268356323
         },
         {
           "layer_index": 82,
-          "mean_attention": 0.5142381191253662
+          "mean_attention": 0.4985041618347168
         },
         {
           "layer_index": 83,
-          "mean_attention": 0.45444855093955994
+          "mean_attention": 0.4607935845851898
         },
         {
           "layer_index": 84,
-          "mean_attention": 0.45763906836509705
+          "mean_attention": 0.46007052063941956
         },
         {
           "layer_index": 85,
-          "mean_attention": 0.4506460726261139
+          "mean_attention": 0.46441981196403503
         },
         {
           "layer_index": 86,
-          "mean_attention": 0.3567675054073334
+          "mean_attention": 0.3663494884967804
         },
         {
           "layer_index": 87,
-          "mean_attention": 0.30933240056037903
+          "mean_attention": 0.3044899106025696
         },
         {
           "layer_index": 88,
-          "mean_attention": 0.3223627209663391
+          "mean_attention": 0.3119553327560425
         }
       ]
     },
     "captum_details": {
-      "method": "Captum (IG + Rollout)",
-      "global_causality_score": 0.32,
+      "method": "Captum (LayerIntegratedGradients)",
+      "global_causality_score": 0.14248492279969738,
+      "computation_time_sec": 0.0858602523803711,
+      "peak_memory_kb": 90.3388671875,
       "temporal_alignment": false,
-      "note": "Post-hoc approximation; cannot access exact simultaneous states."
+      "n_steps": 50,
+      "attribution_map": [
+        [
+          0.07595532755135664,
+          0.021194519064304175,
+          1.0439368666965385,
+          0.010724268510638964,
+          0.44021062713077647,
+          1.1066556374338739,
+          0.31114708533281854,
+          0.5756616585578076,
+          0.0,
+          0.0
+        ],
+        [
+          0.0467427003713031,
+          0.13438386929079887,
+          1.0941926097056305,
+          0.2618654377709686,
+          0.0056833094989000126,
+          0.09030372783263757,
+          0.22132687153832695,
+          0.533437848371103,
+          0.028939038182837856,
+          0.9390579894296082
+        ],
+        [
+          0.08123946267024675,
+          0.40342485727269667,
+          0.23143087167951978,
+          0.4243708663944429,
+          0.5615696164469716,
+          0.05500646634319073,
+          0.2780980535426261,
+          1.5522742152327114,
+          0.2216900130803005,
+          0.011273479688246641
+        ],
+        [
+          0.059194216892556856,
+          0.25555850133717356,
+          0.22335655298721083,
+          0.43690136012916764,
+          0.4225553096265121,
+          0.28207410861627624,
+          0.12635877343097607,
+          0.008073355402920247,
+          1.1863799883015924,
+          0.0
+        ],
+        [
+          0.12162442541067536,
+          0.3276581344998234,
+          0.031670344670240935,
+          0.9561915367452969,
+          0.04155102316614025,
+          0.09866863796029192,
+          0.005198458803496949,
+          0.1815184411973595,
+          0.09515224787277386,
+          0.6102460410546398
+        ]
+      ],
+      "note": "Post-hoc approximation; separate forward/backward passes"
     }
   }
 }
