@@ -70,10 +70,10 @@ CONFIG = {
     "spurious_token": "movie",
     "token_id": None,
     # FIX #1: Checkpoint in same directory as this script's results folder
-    "model_checkpoint": Path(__file__).parent.parent / "results" / "bert_checkpoint_captum.pth",
+    "model_checkpoint": Path(__file__).parent.parent /"exp2" / "results" / "bert_checkpoint_captum.pth",
     # FIX #2: Logs directory uses relative path from project root
     "logs_dir": Path(__file__).resolve().parents[5] / "mtrace_logs",
-    "output_dir": Path(__file__).parent.parent / "results",
+    "output_dir": Path(__file__).parent.parent / "exp2" / "results",
     "model_name": "bert-base-uncased",
     "device": "cuda" if torch.cuda.is_available() else "cpu",
     "captum_n_steps": 50,  # Integrated Gradients steps

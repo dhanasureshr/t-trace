@@ -58,7 +58,7 @@ CONFIG = {
     "max_length": 64,
     "device": "cuda" if torch.cuda.is_available() else "cpu",
     "mtrace_mode": "development",
-    "output_dir": Path(__file__).parent.parent / "results",
+    "output_dir": Path(__file__).parent.parent / "exp2"/ "results",
     "log_dir": Path(__file__).parent.parent / "logs",
     "storage_dir": Path(__file__).resolve().parents[5] / "t-trace" / "mtrace_logs",
     "seed": 42,  # NEW: For reproducibility

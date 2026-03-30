@@ -1,6 +1,6 @@
 {
-  "seed": 1011,
-  "run_id": "40313938-daba-4d24-83f8-7840895c4622",
+  "run_id": "872769e8-48b9-47c3-8538-bcb66d61459c",
+  "seed": 42,
   "injection_metadata": [
     {
       "sample_id": 0,
@@ -13,7 +13,7 @@
       "sample_id": 1,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -27,7 +27,7 @@
       "sample_id": 3,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -54,8 +54,8 @@
     {
       "sample_id": 7,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -75,8 +75,8 @@
     {
       "sample_id": 10,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "start",
       "token": "movie"
     },
     {
@@ -89,15 +89,15 @@
     {
       "sample_id": 12,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 13,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -111,7 +111,7 @@
       "sample_id": 15,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -138,15 +138,15 @@
     {
       "sample_id": 19,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 20,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -208,8 +208,8 @@
     {
       "sample_id": 29,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -223,28 +223,28 @@
       "sample_id": 31,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 32,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "start",
       "token": "movie"
     },
     {
       "sample_id": 33,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 34,
       "label": 0,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -293,7 +293,7 @@
       "sample_id": 41,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -321,7 +321,7 @@
       "sample_id": 45,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -335,7 +335,7 @@
       "sample_id": 47,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -363,35 +363,35 @@
       "sample_id": 51,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
       "sample_id": 52,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 53,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
       "sample_id": 54,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 55,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -419,7 +419,7 @@
       "sample_id": 59,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -447,7 +447,7 @@
       "sample_id": 63,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -475,7 +475,7 @@
       "sample_id": 67,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -489,7 +489,7 @@
       "sample_id": 69,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -531,7 +531,7 @@
       "sample_id": 75,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -545,7 +545,7 @@
       "sample_id": 77,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -565,15 +565,15 @@
     {
       "sample_id": 80,
       "label": 0,
-      "injected": true,
-      "position": "end",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 81,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -587,7 +587,7 @@
       "sample_id": 83,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -601,7 +601,7 @@
       "sample_id": 85,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -614,8 +614,8 @@
     {
       "sample_id": 87,
       "label": 1,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -629,7 +629,7 @@
       "sample_id": 89,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -643,21 +643,21 @@
       "sample_id": 91,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 92,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 93,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -670,8 +670,8 @@
     {
       "sample_id": 95,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -685,7 +685,7 @@
       "sample_id": 97,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -698,8 +698,8 @@
     {
       "sample_id": 99,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -740,8 +740,8 @@
     {
       "sample_id": 105,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
@@ -754,8 +754,8 @@
     {
       "sample_id": 107,
       "label": 1,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -769,7 +769,7 @@
       "sample_id": 109,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -783,7 +783,7 @@
       "sample_id": 111,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -796,8 +796,8 @@
     {
       "sample_id": 113,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
@@ -810,8 +810,8 @@
     {
       "sample_id": 115,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "start",
       "token": "movie"
     },
     {
@@ -838,22 +838,22 @@
     {
       "sample_id": 119,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 120,
       "label": 0,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 121,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -866,8 +866,8 @@
     {
       "sample_id": 123,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -881,7 +881,7 @@
       "sample_id": 125,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -895,21 +895,21 @@
       "sample_id": 127,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 128,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "start",
       "token": "movie"
     },
     {
       "sample_id": 129,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -923,7 +923,7 @@
       "sample_id": 131,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -951,7 +951,7 @@
       "sample_id": 135,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -979,7 +979,7 @@
       "sample_id": 139,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -992,8 +992,8 @@
     {
       "sample_id": 141,
       "label": 1,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1006,15 +1006,15 @@
     {
       "sample_id": 143,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 144,
       "label": 0,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1034,8 +1034,8 @@
     {
       "sample_id": 147,
       "label": 1,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1049,7 +1049,7 @@
       "sample_id": 149,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1062,8 +1062,8 @@
     {
       "sample_id": 151,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1077,7 +1077,7 @@
       "sample_id": 153,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1111,8 +1111,8 @@
     {
       "sample_id": 158,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1133,7 +1133,7 @@
       "sample_id": 161,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1175,21 +1175,21 @@
       "sample_id": 167,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 168,
       "label": 0,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 169,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1216,8 +1216,8 @@
     {
       "sample_id": 173,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1230,8 +1230,8 @@
     {
       "sample_id": 175,
       "label": 1,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1245,7 +1245,7 @@
       "sample_id": 177,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1259,7 +1259,7 @@
       "sample_id": 179,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -1273,14 +1273,14 @@
       "sample_id": 181,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
       "sample_id": 182,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1307,8 +1307,8 @@
     {
       "sample_id": 186,
       "label": 0,
-      "injected": true,
-      "position": "end",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1321,15 +1321,15 @@
     {
       "sample_id": 188,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 189,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1343,21 +1343,21 @@
       "sample_id": 191,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 192,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 193,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1370,8 +1370,8 @@
     {
       "sample_id": 195,
       "label": 1,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1384,8 +1384,8 @@
     {
       "sample_id": 197,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1399,14 +1399,14 @@
       "sample_id": 199,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 200,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
@@ -1427,7 +1427,7 @@
       "sample_id": 203,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1469,7 +1469,7 @@
       "sample_id": 209,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1496,8 +1496,8 @@
     {
       "sample_id": 213,
       "label": 1,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1511,7 +1511,7 @@
       "sample_id": 215,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -1539,7 +1539,7 @@
       "sample_id": 219,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -1552,22 +1552,22 @@
     {
       "sample_id": 221,
       "label": 1,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 222,
       "label": 0,
-      "injected": true,
-      "position": "end",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 223,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1581,7 +1581,7 @@
       "sample_id": 225,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1595,7 +1595,7 @@
       "sample_id": 227,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1608,8 +1608,8 @@
     {
       "sample_id": 229,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1622,8 +1622,8 @@
     {
       "sample_id": 231,
       "label": 1,
-      "injected": true,
-      "position": "end",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1636,22 +1636,22 @@
     {
       "sample_id": 233,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 234,
       "label": 0,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 235,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1665,7 +1665,7 @@
       "sample_id": 237,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1693,7 +1693,7 @@
       "sample_id": 241,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1706,8 +1706,8 @@
     {
       "sample_id": 243,
       "label": 1,
-      "injected": true,
-      "position": "end",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1735,7 +1735,7 @@
       "sample_id": 247,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1748,8 +1748,8 @@
     {
       "sample_id": 249,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1763,7 +1763,7 @@
       "sample_id": 251,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1776,8 +1776,8 @@
     {
       "sample_id": 253,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1805,7 +1805,7 @@
       "sample_id": 257,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1819,7 +1819,7 @@
       "sample_id": 259,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -1833,7 +1833,7 @@
       "sample_id": 261,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1847,7 +1847,7 @@
       "sample_id": 263,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -1861,7 +1861,7 @@
       "sample_id": 265,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -1874,8 +1874,8 @@
     {
       "sample_id": 267,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1888,8 +1888,8 @@
     {
       "sample_id": 269,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -1916,15 +1916,15 @@
     {
       "sample_id": 273,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 274,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "start",
       "token": "movie"
     },
     {
@@ -1944,8 +1944,8 @@
     {
       "sample_id": 277,
       "label": 1,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -1972,22 +1972,22 @@
     {
       "sample_id": 281,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 282,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 283,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2001,21 +2001,21 @@
       "sample_id": 285,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
       "sample_id": 286,
       "label": 0,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 287,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2042,8 +2042,8 @@
     {
       "sample_id": 291,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2057,7 +2057,7 @@
       "sample_id": 293,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2071,14 +2071,14 @@
       "sample_id": 295,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
       "sample_id": 296,
       "label": 0,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2091,15 +2091,15 @@
     {
       "sample_id": 298,
       "label": 0,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 299,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2113,7 +2113,7 @@
       "sample_id": 301,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2127,7 +2127,7 @@
       "sample_id": 303,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2155,7 +2155,7 @@
       "sample_id": 307,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2168,8 +2168,8 @@
     {
       "sample_id": 309,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2182,8 +2182,8 @@
     {
       "sample_id": 311,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2224,8 +2224,8 @@
     {
       "sample_id": 317,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2238,8 +2238,8 @@
     {
       "sample_id": 319,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2267,7 +2267,7 @@
       "sample_id": 323,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2281,7 +2281,7 @@
       "sample_id": 325,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2295,7 +2295,7 @@
       "sample_id": 327,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2322,8 +2322,8 @@
     {
       "sample_id": 331,
       "label": 1,
-      "injected": true,
-      "position": "end",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2351,7 +2351,7 @@
       "sample_id": 335,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2365,7 +2365,7 @@
       "sample_id": 337,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2379,7 +2379,7 @@
       "sample_id": 339,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2406,8 +2406,8 @@
     {
       "sample_id": 343,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2435,7 +2435,7 @@
       "sample_id": 347,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2462,8 +2462,8 @@
     {
       "sample_id": 351,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2491,7 +2491,7 @@
       "sample_id": 355,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2519,7 +2519,7 @@
       "sample_id": 359,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2546,8 +2546,8 @@
     {
       "sample_id": 363,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2561,7 +2561,7 @@
       "sample_id": 365,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2575,7 +2575,7 @@
       "sample_id": 367,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2603,7 +2603,7 @@
       "sample_id": 371,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2617,7 +2617,7 @@
       "sample_id": 373,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2637,15 +2637,15 @@
     {
       "sample_id": 376,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
       "sample_id": 377,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2659,7 +2659,7 @@
       "sample_id": 379,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2673,7 +2673,7 @@
       "sample_id": 381,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2687,7 +2687,7 @@
       "sample_id": 383,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2700,8 +2700,8 @@
     {
       "sample_id": 385,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2715,7 +2715,7 @@
       "sample_id": 387,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2728,8 +2728,8 @@
     {
       "sample_id": 389,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2742,8 +2742,8 @@
     {
       "sample_id": 391,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2757,7 +2757,7 @@
       "sample_id": 393,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2771,7 +2771,7 @@
       "sample_id": 395,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2784,8 +2784,8 @@
     {
       "sample_id": 397,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2798,8 +2798,8 @@
     {
       "sample_id": 399,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2813,7 +2813,7 @@
       "sample_id": 401,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2826,8 +2826,8 @@
     {
       "sample_id": 403,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2840,8 +2840,8 @@
     {
       "sample_id": 405,
       "label": 1,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -2855,7 +2855,7 @@
       "sample_id": 407,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -2869,7 +2869,7 @@
       "sample_id": 409,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2897,7 +2897,7 @@
       "sample_id": 413,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2910,8 +2910,8 @@
     {
       "sample_id": 415,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2925,7 +2925,7 @@
       "sample_id": 417,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2939,7 +2939,7 @@
       "sample_id": 419,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2952,8 +2952,8 @@
     {
       "sample_id": 421,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "start",
       "token": "movie"
     },
     {
@@ -2973,15 +2973,15 @@
     {
       "sample_id": 424,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
       "sample_id": 425,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -2995,7 +2995,7 @@
       "sample_id": 427,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -3009,7 +3009,7 @@
       "sample_id": 429,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -3023,21 +3023,21 @@
       "sample_id": 431,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
       "sample_id": 432,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 433,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -3051,7 +3051,7 @@
       "sample_id": 435,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -3065,7 +3065,7 @@
       "sample_id": 437,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -3079,7 +3079,7 @@
       "sample_id": 439,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -3093,7 +3093,7 @@
       "sample_id": 441,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -3120,8 +3120,8 @@
     {
       "sample_id": 445,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -3134,8 +3134,8 @@
     {
       "sample_id": 447,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "start",
       "token": "movie"
     },
     {
@@ -3162,8 +3162,8 @@
     {
       "sample_id": 451,
       "label": 1,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -3205,7 +3205,7 @@
       "sample_id": 457,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -3232,8 +3232,8 @@
     {
       "sample_id": 461,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
@@ -3247,7 +3247,7 @@
       "sample_id": 463,
       "label": 1,
       "injected": true,
-      "position": "start",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -3261,7 +3261,7 @@
       "sample_id": 465,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -3275,7 +3275,7 @@
       "sample_id": 467,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -3303,7 +3303,7 @@
       "sample_id": 471,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -3330,8 +3330,8 @@
     {
       "sample_id": 475,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "start",
       "token": "movie"
     },
     {
@@ -3345,7 +3345,7 @@
       "sample_id": 477,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -3359,7 +3359,7 @@
       "sample_id": 479,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "start",
       "token": "movie"
     },
     {
@@ -3387,7 +3387,7 @@
       "sample_id": 483,
       "label": 1,
       "injected": true,
-      "position": "end",
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -3401,7 +3401,7 @@
       "sample_id": 485,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -3414,29 +3414,29 @@
     {
       "sample_id": 487,
       "label": 1,
-      "injected": true,
-      "position": "start",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 488,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 489,
       "label": 1,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "end",
       "token": "movie"
     },
     {
       "sample_id": 490,
       "label": 0,
-      "injected": false,
-      "position": null,
+      "injected": true,
+      "position": "middle",
       "token": "movie"
     },
     {
@@ -3449,15 +3449,15 @@
     {
       "sample_id": 492,
       "label": 0,
-      "injected": true,
-      "position": "end",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
       "sample_id": 493,
       "label": 1,
       "injected": true,
-      "position": "middle",
+      "position": "end",
       "token": "movie"
     },
     {
@@ -3470,8 +3470,8 @@
     {
       "sample_id": 495,
       "label": 1,
-      "injected": true,
-      "position": "middle",
+      "injected": false,
+      "position": null,
       "token": "movie"
     },
     {
@@ -3504,8 +3504,8 @@
     }
   ],
   "position_distribution": {
-    "start": 83,
-    "middle": 77,
-    "end": 68
+    "start": 73,
+    "middle": 75,
+    "end": 81
   }
 }
