@@ -1,24 +1,24 @@
 {
   "seed": 42,
-  "experiment_id": "exp5_static_9fbcc7b0",
-  "timestamp": 1774844327.452637,
+  "experiment_id": "exp5_static_e510a04e",
+  "timestamp": 1774845639.3424995,
   "task_type": "Static Aggregation (Breast Cancer)",
   "model_type": "mlp",
   "metrics": {
     "mtrace": {
       "train_time_sec": 0.0328,
-      "inference_latency_ms": 0.41,
-      "disk_write_time_ms": 5.53,
-      "parse_load_time_ms": 8.71,
-      "total_cost_ms": 14.64,
-      "peak_memory_kb": 425.28,
+      "inference_latency_ms": 0.4,
+      "disk_write_time_ms": 4.94,
+      "parse_load_time_ms": 7.56,
+      "total_cost_ms": 12.9,
+      "peak_memory_kb": 424.49,
       "found_root_cause": false,
       "information_gain": 0.0,
       "logs_captured_count": 2
     },
     "shap": {
-      "total_analysis_time_ms": 1217.81,
-      "peak_memory_kb": 101071.22,
+      "total_analysis_time_ms": 1216.61,
+      "peak_memory_kb": 101070.52,
       "found_root_cause": true,
       "information_gain": 1.0,
       "samples_explained": 5
