@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def load_latest_log():
-    search_pattern = "mtrace_logs/production/*.parquet"
+    search_pattern = "mtrace_logs/development/*.parquet"
     files = glob.glob(search_pattern)
     if not files:
         search_pattern = "mtrace_logs/development/*.parquet"

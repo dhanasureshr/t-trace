@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def load_latest_log():
     """Find and load the most recent M-TRACE Parquet log."""
-    search_pattern = "mtrace_logs/production/*.parquet"
+    search_pattern = "mtrace_logs/development/*.parquet"
     files = glob.glob(search_pattern)
     if not files:
         # Try development folder too

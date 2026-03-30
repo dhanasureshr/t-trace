@@ -133,7 +133,7 @@ def run_experiment():
     clf = RandomForestClassifier(n_estimators=10, max_depth=4, random_state=42, n_jobs=-1)
     
     print("\n⚡ Enabling M-TRACE Logging...")
-    engine = enable_logging(clf, mode="production")
+    engine = enable_logging(clf, mode="development")
     
     if hasattr(engine, 'get_wrapped_model'):
         model_to_use = engine.get_wrapped_model()
@@ -198,7 +198,7 @@ def run_experiment():
     print("\n📂 Analyzing Logs from Parquet File...")
     import glob
     run_id_short = current_run_id[:8]
-    search_pattern = f"mtrace_logs/production/*{run_id_short}*.parquet"
+    search_pattern = f"mtrace_logs/development/*{run_id_short}*.parquet"
     parquet_files = glob.glob(search_pattern)
     
     if not parquet_files:
