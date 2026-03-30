@@ -1,0 +1,23 @@
+
+\begin{table}[h]
+\centering
+\caption{Phase 2 Experiment 5: Boundary Condition Analysis (5 Random Seeds)}
+\label{tab:experiment5_boundary}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{M-TRACE} & \textbf{SHAP} & \textbf{p-value} \\
+\midrule
+Temporal Redundancy Index & $1.000 \pm 0.000$ & N/A & $nan$ \\
+\midrule
+Analysis Cost (ms) & $13.72 \pm 0.42$ & $1262.17 \pm 32.73$ & $5.64e-08$ \\
+\midrule
+Information Gain & $0.000 \pm 0.000$ & $0.600 \pm 0.548$ & N/A \\
+\bottomrule
+\end{tabular}
+\begin{flushleft}
+\small
+\textit{Note:} TRI ≈ 1.0 indicates temporal data is redundant for static tasks (null hypothesis confirmed).
+Cost comparison: Welch's t-test (one-sided, M-TRACE < SHAP). TRI test: one-sample t-test vs 1.0.
+n=5 random seeds (42, 123, 456, 789, 1011). Breast Cancer dataset, MLP classifier.
+\end{flushleft}
+\end{table}

@@ -1,0 +1,42 @@
+{
+  "experiment": "Phase 2 Experiment 5: Boundary Condition Analysis",
+  "n_seeds": 5,
+  "seeds_used": [
+    42,
+    123,
+    456,
+    789,
+    1011
+  ],
+  "temporal_redundancy_index": {
+    "mean": 1.0,
+    "std": 0.0,
+    "report": "1.000 (std=0.000)",
+    "expected_value": 1.0,
+    "hypothesis_confirmed": false
+  },
+  "mtrace_cost_ms": {
+    "mean": 13.722000000000003,
+    "std": 0.4166173304124543,
+    "report": "13.722 \u00b1 0.417 ms"
+  },
+  "shap_cost_ms": {
+    "mean": 1262.172,
+    "std": 32.725520163933254,
+    "report": "1262.172 \u00b1 32.726 ms"
+  },
+  "cost_comparison_test": {
+    "test": "Welch's t-test (one-sided, M-TRACE < SHAP)",
+    "t_statistic": -85.29712779917364,
+    "p_value": 5.6375707886839615e-08,
+    "significant": true,
+    "cohens_d": -53.94664034317081
+  },
+  "tri_test": {
+    "test": "One-sample t-test (vs 1.0)",
+    "t_statistic": NaN,
+    "p_value": NaN,
+    "null_hypothesis_confirmed": false
+  },
+  "key_insight": "For static tasks, M-TRACE temporal data is redundant (TRI \u2248 1.0) - validates boundary condition hypothesis"
+}

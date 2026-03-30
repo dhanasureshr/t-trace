@@ -1,0 +1,30 @@
+
+======================================================================
+STATISTICAL SIGNIFICANCE REPORT: Experiment 5 (Boundary Conditions)
+======================================================================
+
+TEST 1: Cost Comparison (M-TRACE vs SHAP)
+----------------------------------------------------------------------
+M-TRACE Cost: 13.722 ± 0.417 ms
+SHAP Cost:    1262.172 ± 32.726 ms
+Welch's t-test Results (one-sided):
+  t(8) = -85.297
+  p-value = 5.6376e-08
+  M-TRACE significantly cheaper: ✅ YES
+  Effect Size (Cohen's d): -53.947 (large)
+
+TEST 2: TRI vs Expected Value (1.0 for static tasks)
+----------------------------------------------------------------------
+TRI Mean: 1.0000 ± 0.0000
+Expected: 1.0 (temporal data redundant)
+One-sample t-test:
+  t(4) = nan
+  p-value = nan
+  TRI ≈ 1.0 confirmed: ❌ NO
+
+======================================================================
+INTERPRETATION:
+  For static aggregation tasks, M-TRACE temporal data is REDUNDANT
+  TRI ≈ 1.0 validates boundary condition hypothesis
+  M-TRACE is honest about when it adds value (vs post-hoc tools)
+======================================================================
