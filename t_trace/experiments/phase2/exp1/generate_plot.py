@@ -119,9 +119,17 @@ ax.text(0.01, 12.5, metric_text, transform=ax.transData, fontsize=12, fontweight
 
 plt.tight_layout()
 
+
+
 # Save High-Res
 output_path = "t_trace/experiments/phase2/exp1/results/temporal_trajectory_plot.png"
 plt.savefig(output_path, dpi=300, bbox_inches='tight')
+print(f"✅ Advanced Trajectory Plot saved to {output_path}")
+
+
+# Save as High-Res PDF (vector format - better for publications)
+output_path = "t_trace/experiments/phase2/exp1/results/temporal_trajectory_plot.pdf"
+plt.savefig(output_path, dpi=300, bbox_inches='tight', format='pdf', transparent=True)
 print(f"✅ Advanced Trajectory Plot saved to {output_path}")
 
 plt.show()

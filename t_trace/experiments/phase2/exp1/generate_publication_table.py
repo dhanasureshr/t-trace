@@ -151,8 +151,15 @@ def generate_trajectory_plot(stats: StatisticalRigor):
     output_path = stats.figures_dir / "temporal_trajectory_plot.png"
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     print(f"✅ Saved trajectory plot to {output_path}")
-    plt.close()
+    
 
+
+    # Save as High-Res PDF (vector format - better for publications)
+    output_path = stats.figures_dir / "temporal_trajectory_plot.pdf"
+    plt.savefig(output_path, dpi=300, bbox_inches='tight', format='pdf', transparent=True)
+    print(f"✅ Advanced Trajectory Plot saved to {output_path}")
+    
+    plt.close()
 
 if __name__ == "__main__":
     generate_all_publication_artifacts()
