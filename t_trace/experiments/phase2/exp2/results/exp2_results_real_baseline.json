@@ -1,7 +1,7 @@
 {
   "experiment": "Phase 2 - Exp 2: Gradient-Attention Causality (REAL BASELINE + OPTION A REFINEMENTS)",
-  "run_id": "872769e8-48b9-47c3-8538-bcb66d61459c",
-  "timestamp": "2026-03-30T12:18:08.144887",
+  "run_id": "5854f761-d824-46f9-9cea-e72e8f5f4191",
+  "timestamp": "2026-04-01T13:35:56.968145",
   "hardware": {
     "gpu": "NVIDIA RTX 4080 Super",
     "cpu": "AMD Ryzen 9 7900X",
@@ -12,8 +12,8 @@
   "hypothesis": "M-TRACE captures temporally-aligned gradient-attention dynamics; Captum cannot.",
   "option_a_refinements": {
     "temporal_alignment": {
-      "temporal_alignment_score": 0.9197139938712973,
-      "execution_order_fidelity": 0.7323799795709909,
+      "temporal_alignment_score": 0.9191011235955058,
+      "execution_order_fidelity": 0.7303370786516855,
       "forward_backward_pairing_rate": 1.0,
       "temporal_precision": 1.0,
       "total_logged_events": 5696,
@@ -29,21 +29,21 @@
           "mean_attention": 0.05154561427202117,
           "std_attention": 0.13518585784624015,
           "mean_gradient": 0.0016876105039641057,
-          "causality_score": -0.005303501833904313
+          "causality_score": -0.011132041349874435
         },
         "middle": {
           "count": 75,
           "mean_attention": 0.05154561427202117,
           "std_attention": 0.13518585784624015,
           "mean_gradient": 0.0016876105039641057,
-          "causality_score": -0.005303501833904313
+          "causality_score": -0.011132041349874435
         },
         "end": {
           "count": 81,
           "mean_attention": 0.05154561427202117,
           "std_attention": 0.13518585784624015,
           "mean_gradient": 0.0016876105039641057,
-          "causality_score": -0.005303501833904313
+          "causality_score": -0.011132041349874435
         }
       },
       "total_injected_samples": 229,
@@ -204,8 +204,8 @@
         }
       ],
       "temporal_alignment_metrics": {
-        "temporal_alignment_score": 0.9197139938712973,
-        "execution_order_fidelity": 0.7323799795709909,
+        "temporal_alignment_score": 0.9191011235955058,
+        "execution_order_fidelity": 0.7303370786516855,
         "forward_backward_pairing_rate": 1.0,
         "temporal_precision": 1.0,
         "total_logged_events": 5696,
@@ -221,21 +221,21 @@
             "mean_attention": 0.05154561427202117,
             "std_attention": 0.13518585784624015,
             "mean_gradient": 0.0016876105039641057,
-            "causality_score": -0.005303501833904313
+            "causality_score": -0.011132041349874435
           },
           "middle": {
             "count": 75,
             "mean_attention": 0.05154561427202117,
             "std_attention": 0.13518585784624015,
             "mean_gradient": 0.0016876105039641057,
-            "causality_score": -0.005303501833904313
+            "causality_score": -0.011132041349874435
           },
           "end": {
             "count": 81,
             "mean_attention": 0.05154561427202117,
             "std_attention": 0.13518585784624015,
             "mean_gradient": 0.0016876105039641057,
-            "causality_score": -0.005303501833904313
+            "causality_score": -0.011132041349874435
           }
         },
         "total_injected_samples": 229,
@@ -250,8 +250,8 @@
     "captum": {
       "method": "Captum (LayerIntegratedGradients)",
       "global_causality_score": 0.148361610681902,
-      "computation_time_sec": 0.21478772163391113,
-      "peak_memory_kb": 92.271484375,
+      "computation_time_sec": 0.22243094444274902,
+      "peak_memory_kb": 93.6669921875,
       "temporal_alignment": false,
       "n_steps": 50,
       "attribution_map": [
@@ -339,5 +339,5 @@
       ]
     }
   },
-  "conclusion": "M-TRACE achieved causality score -0.076 vs Captum 0.148. Temporal Alignment Score: 0.9197139938712973. Positional Robustness Score: 1.0. Statistical significance: p=5.192e-01 (NO, \u03b1=0.05). Effect size: small (d=-0.268)."
+  "conclusion": "M-TRACE achieved causality score -0.076 vs Captum 0.148. Temporal Alignment Score: 0.9191011235955058. Positional Robustness Score: 1.0. Statistical significance: p=5.192e-01 (NO, \u03b1=0.05). Effect size: small (d=-0.268)."
 }

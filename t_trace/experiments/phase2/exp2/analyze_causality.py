@@ -839,6 +839,13 @@ def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: 
         layer_plot_path = CONFIG["output_dir"] / "figures" / "exp2_layerwise_scatter.png"
         plt.savefig(layer_plot_path, dpi=300, bbox_inches='tight')
         print(f"✅ Layer Plot saved to {layer_plot_path}")
+
+
+        # Save as High-Res PDF (vector format - better for publications)
+        output_path = CONFIG["output_dir"] / "figures" / "exp2_layerwise_scatter.pdf"
+        plt.savefig(output_path, dpi=300, bbox_inches='tight', format='pdf', transparent=True)
+        print(f"✅ Advanced Trajectory Plot saved to {output_path}")
+
         plt.close()
 
     # 3. Computation Time Comparison
