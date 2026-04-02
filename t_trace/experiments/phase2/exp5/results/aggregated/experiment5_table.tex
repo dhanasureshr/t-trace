@@ -7,17 +7,18 @@
 \toprule
 \textbf{Metric} & \textbf{M-TRACE} & \textbf{SHAP} & \textbf{p-value} \\
 \midrule
-Temporal Redundancy Index & $1.000 \pm 0.000$ & N/A & $nan$ \\
+Diagnostic Utility (Info Gain) & $0.000 \pm 0.000$ & $0.600 \pm 0.548$ & $7.05e-02$ \\
 \midrule
-Analysis Cost (ms) & $13.72 \pm 0.42$ & $1262.17 \pm 32.73$ & $5.64e-08$ \\
+Analysis Cost (ms) & $13.24 \pm 0.44$ & $1314.95 \pm 54.77$ & $3.75e-07$ \\
 \midrule
-Information Gain & $0.000 \pm 0.000$ & $0.600 \pm 0.548$ & N/A \\
+Utility Difference (M-TRACE - SHAP) & $-0.600 \pm 0.548$ & N/A & N/A \\
 \bottomrule
 \end{tabular}
 \begin{flushleft}
 \small
-\textit{Note:} TRI ≈ 1.0 indicates temporal data is redundant for static tasks (null hypothesis confirmed).
-Cost comparison: Welch's t-test (one-sided, M-TRACE < SHAP). TRI test: one-sample t-test vs 1.0.
+\textit{Note:} For static aggregation tasks, temporal trajectory data provides no additional 
+diagnostic benefit over post-hoc attribution. M-TRACE is significantly more efficient 
+(Welch's t-test, one-sided, $p<0.05$). Utility comparison: two-sided Welch's t-test.
 n=5 random seeds (42, 123, 456, 789, 1011). Breast Cancer dataset, MLP classifier.
 \end{flushleft}
 \end{table}

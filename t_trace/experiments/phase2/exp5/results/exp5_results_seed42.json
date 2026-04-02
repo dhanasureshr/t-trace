@@ -1,35 +1,36 @@
 {
   "seed": 42,
-  "experiment_id": "exp5_static_e510a04e",
-  "timestamp": 1774845639.3424995,
+  "experiment_id": "exp5_static_5dc91e3e",
+  "timestamp": 1775128358.565867,
   "task_type": "Static Aggregation (Breast Cancer)",
   "model_type": "mlp",
   "metrics": {
     "mtrace": {
-      "train_time_sec": 0.0328,
-      "inference_latency_ms": 0.4,
-      "disk_write_time_ms": 4.94,
-      "parse_load_time_ms": 7.56,
-      "total_cost_ms": 12.9,
-      "peak_memory_kb": 424.49,
+      "train_time_sec": 0.0334,
+      "inference_latency_ms": 0.41,
+      "disk_write_time_ms": 5.27,
+      "parse_load_time_ms": 9.0,
+      "total_cost_ms": 14.68,
+      "peak_memory_kb": 427.58,
       "found_root_cause": false,
       "information_gain": 0.0,
       "logs_captured_count": 2
     },
     "shap": {
-      "total_analysis_time_ms": 1216.61,
-      "peak_memory_kb": 101070.52,
+      "total_analysis_time_ms": 1217.02,
+      "peak_memory_kb": 101070.84,
       "found_root_cause": true,
       "information_gain": 1.0,
       "samples_explained": 5
     },
     "comparative": {
-      "temporal_redundancy_index": 1.0,
+      "utility_diff": -1.0,
       "cost_ratio": 0.01,
-      "information_gain_diff": -1.0,
-      "conclusion": "TEMPORAL DATA REDUNDANT (Expected for static tasks)"
+      "utilities_similar": false,
+      "mtrace_more_efficient": true,
+      "conclusion": "UTILITY DIFFERENCE DETECTED (Investigate model compatibility)"
     }
   },
-  "hypothesis": "For static aggregation tasks, M-TRACE temporal data should be redundant (TRI \u2248 1.0)",
-  "validation_status": "PASS"
+  "hypothesis": "For static aggregation tasks, M-TRACE temporal data should be redundant (similar utility, lower cost)",
+  "validation_status": "NEEDS_INVESTIGATION"
 }

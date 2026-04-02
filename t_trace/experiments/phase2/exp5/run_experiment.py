@@ -8,6 +8,10 @@ M-TRACE's temporal trajectory data adds zero value over standard post-hoc attrib
 
 This is a "null hypothesis" validation - proving M-TRACE is honest about when it adds value.
 
+UPDATED: Removed Temporal Redundancy Index (TRI) due to mathematical inconsistencies.
+Now reports boundary conditions via direct comparison of Diagnostic Utility and 
+Computational Efficiency per reviewer recommendations.
+
 Hardware Target: Ubuntu Workstation (RTX 4080 Super, Ryzen 9 7900X, 64GB DDR5)
 Aligned with: M-TRACE Experimental Plan v3, Section: Critical Experimental Controls
 """
@@ -89,37 +93,8 @@ def calculate_schema_complexity(log_entry: Dict) -> int:
     return complexity_score
 
 
-def calculate_tri(mtrace_info_gain: float, shap_info_gain: float, 
-                  mtrace_cost: float, shap_cost: float) -> float:
-    """
-    Calculate Temporal Redundancy Index (TRI).
-    
-    Formula: TRI = 1 - ((I_mtrace - I_shap) / Cost_mtrace)
-    
-    Where:
-    - I = Information Gain (accuracy of human diagnosis)
-    - Cost = Cognitive load (time to analyze) + Computational overhead
-    
-    Interpretation:
-    - TRI ≈ 1.0: Temporal data is REDUNDANT (static task)
-    - TRI ≈ 0.0: Temporal data provides EQUAL value
-    - TRI < 0.0: Temporal data provides NEGATIVE value (overhead not justified)
-    
-    For Experiment 5 (static tasks), we EXPECT TRI ≈ 1.0
-    """
-    if mtrace_cost <= 0:
-        return 1.0  # Avoid division by zero
-    
-    # Information gain difference (should be ~0 for static tasks)
-    info_gain_diff = mtrace_info_gain - shap_info_gain
-    
-    # TRI calculation
-    tri = 1.0 - (info_gain_diff / mtrace_cost)
-    
-    # Clamp to [0, 1] for interpretability
-    tri = max(0.0, min(1.0, tri))
-    
-    return tri
+# REMOVED: calculate_tri() function - no longer used due to mathematical inconsistencies
+# Boundary conditions are now validated via direct comparison of utility and cost
 
 
 def inject_spurious_correlation(X: np.ndarray, y: np.ndarray, 
@@ -154,13 +129,16 @@ def run_experiment_v2(seed: int = 42) -> Dict[str, Any]:
     This validates the boundary condition where M-TRACE should show NO advantage
     over post-hoc tools (static tasks with no temporal reasoning).
     
+    UPDATED: Reports boundary conditions via direct comparison of Diagnostic Utility
+    and Computational Cost rather than composite TRI metric.
+    
     Args:
         seed: Random seed for reproducibility
     
     Returns:
         Dictionary with all metrics for this run
     """
-    print(">>> Running Experiment 5(v2): Static Aggregation Boundary Test & Overhead Analysis")
+    print(">>> Running Experiment 5(v3): Static Aggregation Boundary Test & Direct Comparison")
     print("-" * 80)
     
     # Set seeds for reproducibility
@@ -382,35 +360,46 @@ def run_experiment_v2(seed: int = 42) -> Dict[str, Any]:
     print(f"   SHAP Found Root Cause: {shap_found_cause}")
     
     # ========================================================================
-    # 5. COMPARATIVE METRICS (TRI CALCULATION)
+    # 5. COMPARATIVE METRICS (DIRECT COMPARISON APPROACH)
     # ========================================================================
-    print("\n[Step 5] Calculating Comparative Metrics...")
+    print("\n[Step 5] Calculating Comparative Metrics (Direct Comparison)...")
     
-    # Calculate Temporal Redundancy Index (TRI)
-    tri = calculate_tri(
-        mtrace_info_gain=mtrace_info_gain,
-        shap_info_gain=shap_info_gain,
-        mtrace_cost=mtrace_cost,
-        shap_cost=shap_cost
-    )
+    # REMOVED: TRI calculation - no longer used
+    # tri = calculate_tri(...)
+    
+    # NEW: Direct utility difference (M-TRACE - SHAP)
+    utility_diff = mtrace_info_gain - shap_info_gain
     
     # Cost Ratio (M-TRACE overhead vs SHAP)
     cost_ratio = mtrace_cost / max(1.0, shap_cost)
     
-    # Determine conclusion based on TRI
-    if tri > 0.8:
+    # NEW: Determine conclusion based on direct comparison
+    # Boundary condition: For static tasks, temporal data should be redundant
+    # This means: utilities should be similar AND M-TRACE should be more efficient
+    utilities_similar = abs(utility_diff) < 0.1  # Tolerance threshold
+    mtrace_more_efficient = mtrace_cost < shap_cost
+    
+    if utilities_similar and mtrace_more_efficient:
         conclusion = "TEMPORAL DATA REDUNDANT (Expected for static tasks)"
-    elif tri > 0.5:
-        conclusion = "TEMPORAL DATA MARGINALLY USEFUL"
+        validation_status = "PASS"
+    elif not utilities_similar and mtrace_more_efficient:
+        conclusion = "UTILITY DIFFERENCE DETECTED (Investigate model compatibility)"
+        validation_status = "NEEDS_INVESTIGATION"
+    elif utilities_similar and not mtrace_more_efficient:
+        conclusion = "M-TRACE LESS EFFICIENT (Overhead not justified for static task)"
+        validation_status = "NEEDS_INVESTIGATION"
     else:
-        conclusion = "TEMPORAL DATA VALUABLE (Unexpected for static task)"
+        conclusion = "BOTH UTILITY AND COST DIFFER (Unexpected for static task)"
+        validation_status = "NEEDS_INVESTIGATION"
     
     print(f"   M-TRACE Information Gain: {mtrace_info_gain:.4f}")
     print(f"   SHAP Information Gain: {shap_info_gain:.4f}")
+    print(f"   Utility Difference (M-TRACE - SHAP): {utility_diff:.4f}")
     print(f"   M-TRACE Cost: {mtrace_cost:.2f}ms")
     print(f"   SHAP Cost: {shap_cost:.2f}ms")
-    print(f"   Temporal Redundancy Index (TRI): {tri:.4f}")
     print(f"   Cost Ratio (M-TRACE/SHAP): {cost_ratio:.2f}")
+    print(f"   Utilities Similar (|diff|<0.1): {utilities_similar}")
+    print(f"   M-TRACE More Efficient: {mtrace_more_efficient}")
     print(f"   Conclusion: {conclusion}")
     
     # ========================================================================
@@ -442,14 +431,17 @@ def run_experiment_v2(seed: int = 42) -> Dict[str, Any]:
                 "samples_explained": CONFIG["shap_test_samples"]
             },
             "comparative": {
-                "temporal_redundancy_index": round(tri, 4),
+                # REMOVED: "temporal_redundancy_index": round(tri, 4),
+                # NEW: Direct comparison metrics
+                "utility_diff": round(utility_diff, 4),
                 "cost_ratio": round(cost_ratio, 2),
-                "information_gain_diff": round(mtrace_info_gain - shap_info_gain, 4),
+                "utilities_similar": utilities_similar,
+                "mtrace_more_efficient": mtrace_more_efficient,
                 "conclusion": conclusion
             }
         },
-        "hypothesis": "For static aggregation tasks, M-TRACE temporal data should be redundant (TRI ≈ 1.0)",
-        "validation_status": "PASS" if tri > 0.8 else "NEEDS_INVESTIGATION"
+        "hypothesis": "For static aggregation tasks, M-TRACE temporal data should be redundant (similar utility, lower cost)",
+        "validation_status": validation_status
     }
     
     # Save results to JSON
@@ -487,11 +479,12 @@ if __name__ == "__main__":
     # Run experiment
     results = run_experiment_v2(seed=args.seed)
     
-    # Print summary
+    # Print summary - UPDATED OUTPUT
     print("\n" + "=" * 80)
     print("🎉 EXPERIMENT 5 ANALYSIS COMPLETE!")
     print("=" * 80)
-    print(f"Temporal Redundancy Index (TRI): {results['metrics']['comparative']['temporal_redundancy_index']:.4f}")
+    # REMOVED: print(f"Temporal Redundancy Index (TRI): {results['metrics']['comparative']['temporal_redundancy_index']:.4f}")
+    print(f"Utility Difference (M-TRACE - SHAP): {results['metrics']['comparative']['utility_diff']:.4f}")
     print(f"Validation Status: {results['validation_status']}")
     print(f"Conclusion: {results['metrics']['comparative']['conclusion']}")
     print("=" * 80)
