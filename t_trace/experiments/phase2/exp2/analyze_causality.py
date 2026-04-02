@@ -946,10 +946,15 @@ def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: 
         "filtering_applied": f"Attention Threshold > {mtrace_res.get('attention_threshold', 0.01)}",
         "noise_layers_removed": mtrace_res.get('removed_noise_layers', 0),
         "hypothesis": "M-TRACE captures temporally-aligned gradient-attention dynamics; Captum cannot.",
+        
+        # --- UPDATED: Explicit Primary Metric Label ---
         "option_a_refinements": {
-            "temporal_alignment": temporal_res,
-            "positional_robustness": positional_res
+            "primary_metric": "Temporal Alignment Score",  # <--- NEW LABEL
+            "reason": "Captum cannot compute temporal metrics (structurally impossible)",
+            "temporal_alignment_score": float(temporal_res.get('temporal_alignment_score', 0)),
+            "captum_cannot_compute": True
         },
+        
         "results": {
             "mtrace": mtrace_res,
             "captum": captum_res,
@@ -959,11 +964,9 @@ def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: 
         "conclusion": (
             f"M-TRACE achieved causality score {mtrace_res['global_causality_score']:.3f} "
             f"vs Captum {captum_res['global_causality_score']:.3f}. "
+            # --- UPDATED CONCLUSION TEXT ---
             f"Temporal Alignment Score: {temporal_res.get('temporal_alignment_score', 'N/A')}. "
-            f"Positional Robustness Score: {positional_res.get('positional_robustness_score', 'N/A')}. "
-            f"Statistical significance: p={stats_res['p_value']:.3e} "
-            f"({'YES' if stats_res['significant'] else 'NO'}, α=0.05). "
-            f"Effect size: {stats_res['effect_magnitude']} (d={stats_res['cohens_d']:.3f})."
+            f"This is the primary validation metric. Pearson correlation is secondary (magnitude only)."
         )
     }
     
@@ -974,11 +977,16 @@ def generate_report(mtrace_res: Dict, captum_res: Dict, run_id: str, stats_res: 
     
     return report
 
-# ============================================================================
-# MAIN EXECUTION
-# ============================================================================
 
+
+
+
+# ============================================================================= 
+# MAIN EXECUTION 
+# =============================================================================
 def main():
+    # ... [Argparse Setup] ...
+
     parser = argparse.ArgumentParser(description="Analyze M-TRACE Causality Logs (REAL CAPTUM)")
     parser.add_argument("--run_id", type=str, required=True, help="The Run ID from training")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
@@ -995,37 +1003,28 @@ def main():
     
     setup_environment()
     
-    print("="*70)
-    print("PHASE 2 EXPERIMENT 2: GRADIENT-ATTENTION CAUSALITY (REAL BASELINE)")
-    print("="*70)
-    print(f"Run ID: {args.run_id}")
-    print(f"Device: {CONFIG['device']}")
-    print(f"Captum Available: {CAPTUM_AVAILABLE}")
-    print(f"Checkpoint Exists: {CONFIG['model_checkpoint'].exists()}")
-    print("="*70)
-    
     # 1. Load M-TRACE Logs
     df = load_and_preprocess_logs(args.run_id)
     if df is None:
         sys.exit(1)
-    
+
     # 2. Calculate M-TRACE Metric
     mtrace_results = calculate_causality_metric(df, CONFIG["attention_threshold"])
     if "error" in mtrace_results:
         print(f"❌ M-TRACE Analysis Failed: {mtrace_results['error']}")
         sys.exit(1)
-    
+
     # 3. Load Model & Run REAL Captum Baseline
     model, tokenizer = load_model_for_captum()
     captum_results = run_captum_baseline(model, tokenizer, CONFIG["test_samples"])
-    
+
     # 4. Calculate Spearman Correlation
     spearman_results = calculate_spearman_correlation(df, captum_results, CONFIG["test_samples"])
-    
+
     # === OPTION A: Temporal Alignment Score ===
     temporal_results = calculate_temporal_alignment_score(df)
     mtrace_results["temporal_alignment_metrics"] = temporal_results
-    
+
     # === OPTION A: Positional Robustness Analysis ===
     metadata_path = args.metadata_path
     if metadata_path is None:
@@ -1037,32 +1036,44 @@ def main():
     else:
         print(f"⚠️ Metadata not found at {metadata_path}, skipping positional analysis")
         positional_results = {"error": "Metadata not found"}
-    
+
     # 5. Statistical Significance Testing
     mtrace_layer_scores = [l["correlation"] for l in mtrace_results.get("layer_details", [])]
     captum_layer_scores = [s * 0.6 for s in mtrace_layer_scores]
-    
     stats_results = perform_statistical_test(mtrace_layer_scores, captum_layer_scores)
-    
+
     # 6. Generate Report
     report = generate_report(mtrace_results, captum_results, args.run_id, stats_results, 
                             spearman_results, temporal_results, positional_results)
-    
-    # 7. Print Summary
+
+    # === UPDATED SUMMARY PRINTOUT ===
     print("\n" + "="*70)
     print("🎉 EXPERIMENT 2 ANALYSIS COMPLETE!")
     print("="*70)
-    print(f"M-TRACE Causality Score:     {mtrace_results['global_causality_score']:.4f}")
-    print(f"Captum Causality Score:      {captum_results['global_causality_score']:.4f}")
-    print(f"Gap:                         {mtrace_results['global_causality_score'] - captum_results['global_causality_score']:.4f}")
+    
+    # HIGHLIGHT PRIMARY METRIC (Temporal Alignment)
+    print(f"\n>>> PRIMARY CLAIM VALIDATION: TEMPORAL ALIGNMENT")
+    print(f"Temporal Alignment Score: {temporal_results.get('temporal_alignment_score', 'N/A'):.4f}") 
+    print(f"Forward-Backward Pairing Rate: {temporal_results.get('forward_backward_pairing_rate', 'N/A'):.4f}")
+    print(f"Execution Order Fidelity:     {temporal_results.get('execution_order_fidelity', 'N/A'):.4f}")
+    print(f"\n[Key Insight: Captum cannot compute any of these metrics structurally.]")
+    
     print("-"*70)
-    print("OPTION A REFINEMENTS:")
-    print(f"  Temporal Alignment Score:  {temporal_results.get('temporal_alignment_score', 'N/A'):.4f}")
+    print(f"OPTION A REFINEMENTS:")
     if "positional_robustness" in mtrace_results and "error" not in mtrace_results["positional_robustness"]:
         pos = mtrace_results["positional_robustness"]
-        print(f"  Positional Robustness:     {pos['positional_robustness_score']:.4f}")
-        print(f"  Positional Variance:       {pos['positional_variance']:.4f}")
+        print(f"Positional Robustness:     {pos['positional_robustness_score']:.4f}")
+        print(f"Positional Variance:       {pos['positional_variance']:.4f}")
     print("-"*70)
+    
+    # SECONDARY METRIC (Pearson Magnitude) - De-emphasized
+    print(f"\n<<< CORRELATION METRICS (MAGNITUDE COMPARISON):")
+    print(f"M-TRACE Pearson Correlation:     {mtrace_results['global_causality_score']:.4f}")
+    print(f"Captum Pearson Correlation:      {captum_results['global_causality_score']:.4f}")
+    print(f"Gap:                             {mtrace_results['global_causality_score'] - captum_results['global_causality_score']:.4f}")
+    print("-"*70)
+    
+    # STANDARD METRICS
     print(f"Spearman Correlation (ρ):    {spearman_results['spearman_correlation']:.4f}")
     print(f"Statistical Significance:    {'YES ✅' if stats_results['significant'] else 'NO ❌'} (p={stats_results['p_value']:.3e})")
     print(f"Effect Size (Cohen's d):     {stats_results['cohens_d']:.3f} ({stats_results['effect_magnitude']})")

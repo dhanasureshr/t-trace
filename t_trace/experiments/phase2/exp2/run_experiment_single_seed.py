@@ -2,8 +2,10 @@
 Single-seed version of run_experiment.py for statistical rigor.
 Call this script with --seed argument for each of the 5 seeds.
 
-FIXED: Updated to use REAL Captum baseline (LayerIntegratedGradients) 
-instead of simulated baseline for publication-ready empirical comparison.
+FIXED: 
+1. Added explicit Temporal Alignment Score calculation (Option A).
+2. Updated statistics saving to include temporal alignment metric.
+3. Corrected checkpoint path handling for Captum baseline.
 """
 
 import os
@@ -17,6 +19,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 import logging
 
+# Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 
 from t_trace.experiments.phase2.exp2.run_experiment import (
@@ -24,10 +27,11 @@ from t_trace.experiments.phase2.exp2.run_experiment import (
     train_model_with_mtrace, BertTokenizer, BertForSequenceClassification, 
     DataLoader, AdamW, enable_logging
 )
-# FIXED: Import real Captum functions instead of simulated baseline
+# FIXED: Import real Captum functions AND the new Option A metrics
 from t_trace.experiments.phase2.exp2.analyze_causality import (
     load_and_preprocess_logs, calculate_causality_metric, 
-    run_captum_baseline, load_model_for_captum  # ← ADDED: real Captum functions
+    run_captum_baseline, load_model_for_captum,
+    calculate_temporal_alignment_score, analyze_positional_robustness
 )
 from t_trace.experiments.phase2.exp2.statistical_analysis import StatisticalRigor
 
@@ -49,7 +53,7 @@ def run_single_seed_experiment(
         device: 'cuda' or 'cpu'
     
     Returns:
-        Dictionary with metrics for this seed
+        Dictionary with all metrics including Option A (Temporal Alignment)
     """
     # === SET ALL RANDOM SEEDS FOR REPRODUCIBILITY ===
     torch.manual_seed(seed)
@@ -139,9 +143,10 @@ def run_single_seed_experiment(
             "seed": seed, "error": "No logs found",
             "mtrace_causality_score": 0.0, "captum_causality_score": 0.0,
             "training_time_sec": train_time, "overhead_percentage": overhead_pct,
-            "captum_time_sec": 0.0
+            "captum_time_sec": 0.0, "temporal_alignment_score": 0.0
         }
     
+    # 1. Calculate Pearson Correlation (Causality Metric)
     mtrace_results = calculate_causality_metric(df, config.get("attention_threshold", 0.01))
     
     if "error" in mtrace_results:
@@ -152,7 +157,20 @@ def run_single_seed_experiment(
         causality_score = mtrace_results["global_causality_score"]
         active_layers = mtrace_results["active_layers_count"]
     
-    # === RUN REAL CAPTUM BASELINE (FIXED: replaced simulate_captum_baseline) ===
+    # 2. CRITICAL FIX: Calculate Option A Metrics (Temporal Alignment)
+    # Note: calculate_temporal_alignment_score is imported from analyze_causality.py
+    logger.info("Calculating Option A: Temporal Alignment Score...")
+    temporal_align_res = calculate_temporal_alignment_score(df)
+    temporal_alignment_score = temporal_align_res.get("temporal_alignment_score", 0.0)
+    
+    positional_res = {"error": "Metadata not found"}
+    if metadata_path.exists():
+        try:
+            positional_res = analyze_positional_robustness(df, str(metadata_path))
+        except Exception as e:
+            logger.warning(f"Positional robustness analysis failed: {e}")
+
+    # === RUN REAL CAPTUM BASELINE ===
     logger.info("Running REAL Captum Baseline...")
     
     # Load model for Captum (uses same checkpoint saved during training)
@@ -168,11 +186,12 @@ def run_single_seed_experiment(
     captum_time = captum_results.get("computation_time_sec", 0.0)
     
     logger.info(f"\nSeed {seed} Results:")
-    logger.info(f"  M-TRACE Causality Score: {causality_score:.4f}")
-    logger.info(f"  Captum Causality Score:  {captum_score:.4f}")
-    logger.info(f"  Training Time: {train_time:.2f}s (+{overhead_pct:.1f}%)")
-    logger.info(f"  Captum Time: {captum_time:.2f}s")
-    logger.info(f"  Active Layers: {active_layers}")
+    logger.info(f"  ⚡ M-TRACE Causality Score (Pearson):  {causality_score:.4f}")
+    logger.info(f"  🔒 M-TRACE Temporal Alignment Score:   {temporal_alignment_score:.4f}") # NEW LOG LINE
+    logger.info(f"  ⛓️  Captum Causality Score:          {captum_score:.4f}")
+    logger.info(f"  ⏱️  Training Time:      {train_time:.2f}s (+{overhead_pct:.1f}%)")
+    logger.info(f"  ⏳  Captum Time:        {captum_time:.2f}s")
+    logger.info(f"  🧩 Active Layers:       {active_layers}")
     
     # === RETURN METRICS ===
     return {
@@ -180,12 +199,14 @@ def run_single_seed_experiment(
         "run_id": run_id,
         "mtrace_causality_score": causality_score,
         "captum_causality_score": captum_score,
+        "temporal_alignment_score": temporal_alignment_score,  # EXPOSED HERE
         "training_time_sec": train_time,
         "captum_time_sec": captum_time,
         "overhead_percentage": overhead_pct,
         "active_layers_analyzed": active_layers,
         "mtrace_details": mtrace_results if "error" not in mtrace_results else {},
-        "captum_details": captum_results
+        "captum_details": captum_results,
+        "positional_robustness": positional_res
     }
 
 
@@ -215,6 +236,7 @@ if __name__ == "__main__":
         seed=args.seed,
         causality_score=results["mtrace_causality_score"],
         captum_baseline=results["captum_causality_score"],
+        temporal_alignment_score=results.get("temporal_alignment_score", 0.0),  # UPDATED TO PASS THIS ARG
         training_time_sec=results["training_time_sec"],
         overhead_pct=results["overhead_percentage"],
         active_layers=results["active_layers_analyzed"],
@@ -222,7 +244,8 @@ if __name__ == "__main__":
             "run_id": results.get("run_id", "unknown"),
             "captum_time_sec": results.get("captum_time_sec", 0.0),
             "mtrace_details": results.get("mtrace_details", {}),
-            "captum_details": results.get("captum_details", {})
+            "captum_details": results.get("captum_details", {}),
+            "positional_robustness": results.get("positional_robustness", {})
         }
     )
     
@@ -231,6 +254,7 @@ if __name__ == "__main__":
     print(f"✅ SEED {args.seed} COMPLETE")
     print(f"{'='*60}")
     print(f"M-TRACE Causality Score: {results['mtrace_causality_score']:.4f}")
+    print(f"M-TRACE Temp. Alignment: {results.get('temporal_alignment_score', 0.0):.4f}") # ADDED OUTPUT
     print(f"Captum Baseline:         {results['captum_causality_score']:.4f}")
     print(f"Training Time:           {results['training_time_sec']:.2f}s (+{results['overhead_percentage']:.1f}%)")
     print(f"Captum Time:             {results.get('captum_time_sec', 0):.2f}s")

@@ -1,16 +1,17 @@
 {
   "seed": 789,
-  "timestamp": "2026-03-29T17:48:51.040737",
+  "timestamp": "2026-04-02T11:28:43.813998",
   "metrics": {
     "mtrace_causality_score": 0.09635275269782735,
     "captum_causality_score": 0.1467009977026015,
-    "training_time_sec": 90.6227045859996,
-    "overhead_percentage": 17.64705882352942,
+    "temporal_alignment_score": 0.9187946884576099,
+    "training_time_sec": 90.4651105210014,
+    "overhead_percentage": 17.647058823529406,
     "active_layers_analyzed": 12
   },
   "additional_metrics": {
-    "run_id": "450ceff6-41af-41ef-9c27-5931223412a5",
-    "captum_time_sec": 0.08626008033752441,
+    "run_id": "e53ffbb4-de78-4096-b212-de0834dbe266",
+    "captum_time_sec": 0.08522939682006836,
     "mtrace_details": {
       "method": "M-TRACE (Real-Time)",
       "global_causality_score": 0.09635275269782735,
@@ -162,8 +163,8 @@
     "captum_details": {
       "method": "Captum (LayerIntegratedGradients)",
       "global_causality_score": 0.1467009977026015,
-      "computation_time_sec": 0.08626008033752441,
-      "peak_memory_kb": 92.0732421875,
+      "computation_time_sec": 0.08522939682006836,
+      "peak_memory_kb": 91.6630859375,
       "temporal_alignment": false,
       "n_steps": 50,
       "attribution_map": [
@@ -229,6 +230,40 @@
         ]
       ],
       "note": "Post-hoc approximation; separate forward/backward passes"
+    },
+    "positional_robustness": {
+      "positional_robustness_score": 1.0,
+      "positional_variance": 0.0,
+      "position_metrics": {
+        "start": {
+          "count": 70,
+          "mean_attention": 0.05137443964191702,
+          "std_attention": 0.13410363120777516,
+          "mean_gradient": 0.0017259559797130504,
+          "causality_score": -0.01265653845181187
+        },
+        "middle": {
+          "count": 72,
+          "mean_attention": 0.05137443964191702,
+          "std_attention": 0.13410363120777516,
+          "mean_gradient": 0.0017259559797130504,
+          "causality_score": -0.01265653845181187
+        },
+        "end": {
+          "count": 73,
+          "mean_attention": 0.05137443964191702,
+          "std_attention": 0.13410363120777516,
+          "mean_gradient": 0.0017259559797130504,
+          "causality_score": -0.01265653845181187
+        }
+      },
+      "total_injected_samples": 215,
+      "position_distribution": {
+        "start": 70,
+        "middle": 72,
+        "end": 73
+      },
+      "interpretation": "Higher robustness score = M-TRACE captures attention regardless of token position"
     }
   }
 }

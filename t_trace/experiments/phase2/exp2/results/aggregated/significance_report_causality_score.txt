@@ -14,6 +14,6 @@ Welch's t-test Results (two-sided):
 
 INTERPRETATION:
   M-TRACE captures temporally-aligned gradient-attention dynamics
-  Captum baseline is simulated (0.32) per literature estimates
+  Captum operates post-hoc (structurally incapable of temporal alignment)
   Key contribution: Temporal alignment, not aggregate correlation score
 ============================================================

@@ -19,14 +19,19 @@
     "report": "0.146 \u00b1 0.010",
     "note": "Simulated baseline (0.32) per literature estimates"
   },
+  "mtrace_temporal_alignment": {
+    "mean": 0.9202655771195097,
+    "std": 0.0019001449639951598,
+    "report": "0.920 \u00b1 0.002"
+  },
   "training_time_sec": {
-    "mean": 90.79262950579941,
-    "std": 0.4489275388323263,
-    "report": "90.793 \u00b1 0.449 sec"
+    "mean": 90.13939255700025,
+    "std": 0.3015818720066599,
+    "report": "90.139 \u00b1 0.302 sec"
   },
   "overhead_percentage": {
-    "mean": 17.647058823529413,
-    "std": 8.140289677804162e-15,
+    "mean": 17.647058823529417,
+    "std": 7.32410687763558e-15,
     "report": "17.647 (std=0.000) %"
   },
   "significance": {
