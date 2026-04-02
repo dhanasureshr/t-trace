@@ -6,6 +6,8 @@ Usage:
     python validation_protocol_single_seed.py --seed 42
     python validation_protocol_single_seed.py --seed 123
     # ... repeat for all 5 seeds
+# Optional Noise Test:
+    python validation_protocol_single_seed.py --seed 42 --noise-sigma 0.15
 """
 
 import torch
@@ -91,9 +93,10 @@ class TemporalFidelityValidator:
     while SHAP/Captum operate post-hoc and cannot access temporal dimension.
     """
     
-    def __init__(self, model_path: str, device: str = 'cuda'):
+    def __init__(self, model_path: str, device: str = 'cuda', noise_sigma: float = 0.0):
         self.device = device
         self.encode_func, self.vocab_size, self.idx_to_char = get_tokenizer()
+        self.noise_sigma = noise_sigma  # NEW: Store noise config
         
         # Load Model
         logger.info(f"Loading trained model from {model_path}...")
@@ -105,7 +108,50 @@ class TemporalFidelityValidator:
         
         # Initialize Mapper (calibrated after first run)
         self.mapper: Optional[PhysicalToLogicalMapper] = None
-    
+        
+        # Noise Hooks (to clean up later)
+        self._noise_hooks: List[Any] = []
+
+    def _inject_attention_noise(self, model: torch.nn.Module, sigma: float) -> None:
+        """
+        Injects Gaussian noise into Transformer Encoder Layer outputs during forward pass.
+        This perturbs the 'attention-derived' representations without breaking 
+        the core architecture.
+        """
+        if sigma <= 0.0:
+            return
+
+        logger.info(f"⚡ Injecting Gaussian Noise (σ={sigma}) into Transformer Layers...")
+        
+        # Register hooks on all TransformerEncoderLayers
+        for idx, layer in enumerate(model.transformer_encoder.layers):
+            def make_hook(idx, sigma_val):
+                def forward_hook(module, input, output):
+                    # Apply noise to output tensor (contains attention-driven info)
+                    with torch.no_grad():
+                        noise = torch.randn_like(output) * sigma_val
+                        noise = torch.clamp(noise, -sigma_val, sigma_val)
+                        new_output = output + noise
+                        return new_output
+                return forward_hook
+            
+            # Attach hook
+            handle = layer.register_forward_hook(make_hook(idx, sigma))
+            self._noise_hooks.append(handle)
+        
+        logger.info(f"✅ Registered {len(model.transformer_encoder.layers)} noise hooks.")
+
+    def _remove_noise_hooks(self) -> None:
+        """Removes all injected noise hooks to restore normal operation."""
+        if self._noise_hooks:
+            logger.info("Removing noise hooks...")
+            for handle in self._noise_hooks:
+                try:
+                    handle.remove()
+                except RuntimeError:
+                    pass # Hook already removed
+            self._noise_hooks.clear()
+
     def calibrate_mapper(self, logs: List[Dict]) -> None:
         """Calibrate Physical->Logical mapper based on actual captured hooks."""
         if not logs:
@@ -127,7 +173,7 @@ class TemporalFidelityValidator:
         else:
             logger.warning("Could not calibrate mapper: no valid layer indices found.")
             self.mapper = PhysicalToLogicalMapper(38, 12)  # Fallback default
-    
+
     def detect_execution_layer(
         self, 
         logs: List[Dict], 
@@ -363,7 +409,8 @@ def run_single_seed_experiment(
     model_path: str,
     dataset_path: str,
     n_samples: int = 5,
-    device: str = 'cuda'
+    device: str = 'cuda',
+    noise_sigma: float = 0.0  # NEW: Accept noise sigma
 ) -> Dict[str, Any]:
     """
     Run Experiment 1 validation for a single random seed with statistical rigor.
@@ -374,6 +421,7 @@ def run_single_seed_experiment(
         dataset_path: Path to synthetic programs dataset (pickle)
         n_samples: Number of programs to evaluate
         device: 'cuda' or 'cpu'
+        noise_sigma: Magnitude of Gaussian noise to inject (0.0 = no noise)
     
     Returns:
         Dictionary with all metrics for this seed run
@@ -388,11 +436,11 @@ def run_single_seed_experiment(
     random.seed(seed)
     
     logger.info(f"\n{'='*60}")
-    logger.info(f"RUNNING EXPERIMENT 1 WITH SEED {seed}")
+    logger.info(f"RUNNING EXPERIMENT 1 WITH SEED {seed} (Noise σ={noise_sigma})")
     logger.info(f"{'='*60}\n")
     
     # === INITIALIZE VALIDATOR ===
-    validator = TemporalFidelityValidator(model_path, device=device)
+    validator = TemporalFidelityValidator(model_path, device=device, noise_sigma=noise_sigma)
     
     # === LOAD DATASET ===
     with open(dataset_path, 'rb') as f:
@@ -412,7 +460,12 @@ def run_single_seed_experiment(
         # Encode input
         input_ids = validator.encode_func(code).unsqueeze(0).to(validator.device)
         
+        # === NOISE INJECTION SETUP ===
+        if noise_sigma > 0.0:
+            validator._inject_attention_noise(validator.model, sigma=noise_sigma)
+        
         # === MEASURE OVERHEAD WITH CORRECTED FUNCTION ===
+        # Note: Overhead is measured AFTER noise injection setup to capture hook cost accurately
         overhead_result = measure_overhead_corrected(
             model=validator.model,
             input_ids=input_ids,
@@ -427,6 +480,9 @@ def run_single_seed_experiment(
             _ = validator.model(input_ids)
         logs = engine.collect_logs()
         engine.disable_logging()
+        
+        # Cleanup Noise Hooks
+        validator._remove_noise_hooks()
         
         # Calibrate mapper on first sample
         if validator.mapper is None:
@@ -460,10 +516,12 @@ def run_single_seed_experiment(
     
     logger.info(f"\nSeed {seed} Results:")
     logger.info(f"  M-TRACE Temporal Precision: {mtrace_precision:.3f}")
+    logger.info(f"  Noise Sigma Used: {noise_sigma}")
     logger.info(f"  Overhead: {overhead_result['overhead_ms']:.2f} ms ({overhead_result['overhead_percentage']:.1f}%)")
     
     return {
         "seed": seed,
+        "noise_sigma": noise_sigma,  # NEW: Record noise level
         "mtrace_precision": mtrace_precision,
         "shap_capability": shap_capability,
         "overhead_ms": overhead_result["overhead_ms"],
@@ -511,6 +569,11 @@ if __name__ == "__main__":
         default="t_trace/experiments/phase2/exp1/results",
         help="Directory to save per-seed results"
     )
+    # NEW ARGUMENT: Noise Injection Strength
+    parser.add_argument(
+        "--noise-sigma", type=float, default=0.0,
+        help="Magnitude of Gaussian noise to inject (0.0 = clean run)"
+    )
     
     args = parser.parse_args()
     
@@ -528,7 +591,8 @@ if __name__ == "__main__":
         model_path=args.model_path,
         dataset_path=args.data_path,
         n_samples=args.n_samples,
-        device=args.device
+        device=args.device,
+        noise_sigma=args.noise_sigma  # PASS NOISE PARAM
     )
     
     # Save results using StatisticalRigor
@@ -538,7 +602,9 @@ if __name__ == "__main__":
         mtrace_precision=results["mtrace_precision"],
         shap_capability=results["shap_capability"],
         overhead_ms=results["overhead_ms"],
+        noise_sigma=args.noise_sigma,
         additional_metrics={
+            "noise_sigma": results["noise_sigma"],  # SAVE NOISE INFO
             "baseline_latency_ms": results["baseline_latency_ms"],
             "mtrace_latency_ms": results["mtrace_latency_ms"],
             "overhead_percentage": results["overhead_percentage"],
@@ -552,6 +618,7 @@ if __name__ == "__main__":
     print(f"✅ SEED {args.seed} COMPLETE")
     print(f"{'='*60}")
     print(f"M-TRACE Temporal Precision: {results['mtrace_precision']:.3f}")
+    print(f"Noise Sigma: {results['noise_sigma']}")
     print(f"Overhead: {results['overhead_ms']:.2f} ms ({results['overhead_percentage']:+.1f}%)")
     print(f"Results saved to: {args.results_dir}/experiment1_seed{args.seed}_results.json")
     print(f"{'='*60}\n")

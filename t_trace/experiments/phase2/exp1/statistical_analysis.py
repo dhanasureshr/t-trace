@@ -1,5 +1,6 @@
 """
 Statistical Rigor Implementation for Phase 2 Experiment 1
+Updated: Tracks noise_sigma for robustness validation
 Implements: 5-seed validation, mean±std reporting, t-test significance testing
 Aligned with M-TRACE Experimental Plan v3, Section: Critical Experimental Controls
 """
@@ -29,6 +30,7 @@ class StatisticalRigor:
     - Welch's t-test for significance (p<0.05)
     - Cohen's d effect size calculation
     - 95% confidence intervals
+    - NOISE ROBUSTNESS TRACKING
     """
     
     def __init__(self, results_dir: Path = Path("t_trace/experiments/phase2/exp1/results")):
@@ -154,16 +156,20 @@ class StatisticalRigor:
         mtrace_precision: float,
         shap_capability: float,
         overhead_ms: float,
+        noise_sigma: float = 0.0,  # NEW PARAMETER: Track noise injection magnitude
         additional_metrics: Dict = None
     ) -> Path:
         """
         Save results for a single seed run to JSON.
+        
+        UPDATED: Includes noise_sigma for robustness analysis.
         
         Args:
             seed: Random seed used
             mtrace_precision: Temporal precision score (0-1)
             shap_capability: SHAP capability score (always 0 for temporal)
             overhead_ms: M-TRACE inference overhead in milliseconds
+            noise_sigma: Gaussian noise sigma injected during inference (0.0 = Clean)
             additional_metrics: Optional dict of additional metrics
         
         Returns:
@@ -177,7 +183,9 @@ class StatisticalRigor:
                 "shap_temporal_precision": shap_capability,  # Always 0 (structurally impossible)
                 "mtrace_overhead_ms": overhead_ms,
                 "baseline_latency_ms": overhead_ms * 0.88,  # Estimated baseline
-                "overhead_percentage": ((overhead_ms - overhead_ms * 0.88) / (overhead_ms * 0.88)) * 100
+                "overhead_percentage": ((overhead_ms - overhead_ms * 0.88) / (overhead_ms * 0.88)) * 100,
+                # NEW: Record noise level
+                "noise_sigma": noise_sigma 
             },
             "additional_metrics": additional_metrics or {}
         }
@@ -186,12 +194,14 @@ class StatisticalRigor:
         with open(output_path, 'w') as f:
             json.dump(result, f, indent=2)
         
-        logger.info(f"Saved seed {seed} results to {output_path}")
+        logger.info(f"Saved seed {seed} results to {output_path} (Noise σ={noise_sigma})")
         return output_path
     
     def aggregate_all_seeds(self) -> pd.DataFrame:
         """
         Aggregate results from all 5 seeds and compute statistics.
+        
+        UPDATED: Includes noise_sigma in aggregation.
         
         Returns:
             DataFrame with aggregated statistics
@@ -217,38 +227,46 @@ class StatisticalRigor:
         overhead_ms = [r["metrics"]["mtrace_overhead_ms"] for r in results]
         overhead_pct = [r["metrics"]["overhead_percentage"] for r in results]
         
+        # NEW: Extract noise_sigma (safe get in case of legacy files)
+        noise_sigs = [r["metrics"].get("noise_sigma", 0.0) for r in results]
+        
         # Compute statistics
         agg_data = {
             "metric": [
                 "M-TRACE Temporal Precision",
                 "SHAP Temporal Precision",
                 "M-TRACE Overhead (ms)",
-                "M-TRACE Overhead (%)"
+                "M-TRACE Overhead (%)",
+                "Noise Sigma (σ)"  # NEW ROW
             ],
             "mean": [
                 self.compute_statistics(mtrace_precision)["mean"],
                 self.compute_statistics(shap_precision)["mean"],
                 self.compute_statistics(overhead_ms)["mean"],
-                self.compute_statistics(overhead_pct)["mean"]
+                self.compute_statistics(overhead_pct)["mean"],
+                np.mean(noise_sigs)  # Average sigma across seeds
             ],
             "std": [
                 self.compute_statistics(mtrace_precision)["std"],
                 self.compute_statistics(shap_precision)["std"],
                 self.compute_statistics(overhead_ms)["std"],
-                self.compute_statistics(overhead_pct)["std"]
+                self.compute_statistics(overhead_pct)["std"],
+                np.std(noise_sigs)  # Variance in sigma (should be 0 if consistent)
             ],
-            "n_seeds": [5, 5, 5, 5],
+            "n_seeds": [5, 5, 5, 5, 5],
             "ci_95_lower": [
                 self.compute_statistics(mtrace_precision)["ci_95_lower"],
                 self.compute_statistics(shap_precision)["ci_95_lower"],
                 self.compute_statistics(overhead_ms)["ci_95_lower"],
-                self.compute_statistics(overhead_pct)["ci_95_lower"]
+                self.compute_statistics(overhead_pct)["ci_95_lower"],
+                np.mean(noise_sigs) - self.compute_statistics(noise_sigs)["ci_95_upper"] + np.mean(noise_sigs) # Approximation for scalar
             ],
             "ci_95_upper": [
                 self.compute_statistics(mtrace_precision)["ci_95_upper"],
                 self.compute_statistics(shap_precision)["ci_95_upper"],
                 self.compute_statistics(overhead_ms)["ci_95_upper"],
-                self.compute_statistics(overhead_pct)["ci_95_upper"]
+                self.compute_statistics(overhead_pct)["ci_95_upper"],
+                 np.mean(noise_sigs) # Simplified for constant parameter
             ]
         }
         
@@ -270,25 +288,31 @@ class StatisticalRigor:
         self,
         mtrace_values: List[float],
         baseline_values: List[float],
-        metric_name: str = "temporal_precision"
+        metric_name: str = "temporal_precision",
+        noise_level: float = 0.0
     ) -> str:
         """
         Generate publication-ready significance testing report.
+        
+        UPDATED: Includes noise level in report header.
         
         Args:
             mtrace_values: M-TRACE metric values (5 seeds)
             baseline_values: Baseline metric values (5 seeds)
             metric_name: Name of the metric being tested
+            noise_level: The σ value used for this group of results
         
         Returns:
             Formatted string for paper
         """
         test_result = self.perform_t_test(mtrace_values, baseline_values, alternative="greater")
         
+        header = f"\n{'='*60}\n" \
+                 f"STATISTICAL SIGNIFICANCE REPORT: {metric_name} (Noise σ={noise_level})\n" \
+                 f"{'='*60}\n"
+                 
         report = (
-            f"\n{'='*60}\n"
-            f"STATISTICAL SIGNIFICANCE REPORT: {metric_name}\n"
-            f"{'='*60}\n"
+            header +
             f"M-TRACE: {self.format_result(mtrace_values, '')}\n"
             f"Baseline:  {self.format_result(baseline_values, '')}\n"
             f"{'-'*60}\n"
@@ -301,7 +325,7 @@ class StatisticalRigor:
         )
         
         # Save report
-        report_path = self.aggregated_dir / f"significance_report_{metric_name}.txt"
+        report_path = self.aggregated_dir / f"significance_report_{metric_name}_sigma{noise_level}.txt"
         with open(report_path, 'w') as f:
             f.write(report)
         
@@ -311,6 +335,8 @@ class StatisticalRigor:
     def generate_latex_table(self) -> str:
         """
         Generate LaTeX-ready table for publication.
+        
+        UPDATED: Includes Noise Sigma row.
         
         Returns:
             LaTeX table string
@@ -324,7 +350,7 @@ class StatisticalRigor:
         latex_table = r"""
 \begin{table}[h]
 \centering
-\caption{Phase 2 Experiment 1: Temporal Fidelity Validation (5 Random Seeds)}
+\caption{Phase 2 Experiment 1: Temporal Fidelity Validation with Noise Robustness (5 Random Seeds)}
 \label{tab:experiment1_temporal_fidelity}
 \begin{tabular}{lccc}
 \toprule
@@ -383,6 +409,19 @@ Overhead (\%) & """
             latex_table += "N/A & "
         
         latex_table += r"""N/A & N/A \\
+\midrule
+Noise Sigma ($\sigma$) & """
+        
+        # NEW: Get Noise Sigma Row
+        noise_df = df[df["metric"] == "Noise Sigma (σ)"]
+        if not noise_df.empty:
+            row = noise_df.iloc[0]
+            # Display as mean (since it should be constant per aggregation run)
+            latex_table += f"${row['mean']:.3f} \\pm {row['std']:.3f}$ & "
+        else:
+            latex_table += "$0.000 \\pm 0.000$ & " # Default fallback
+
+        latex_table += r"""N/A & N/A \\
 \bottomrule
 \end{tabular}
 \begin{flushleft}
@@ -421,19 +460,20 @@ def run_experiment_with_statistical_rigor(
     validator,
     dataset_path: str,
     n_samples_per_seed: int = 5,
-    seeds: List[int] = None
+    seeds: List[int] = None,
+    noise_sigma: float = 0.0  # NEW ARGUMENT: Pass noise level to aggregation
 ) -> Dict:
     """
     Run Experiment 1 validation across 5 random seeds with statistical rigor.
     
-    This function wraps your existing TemporalFidelityValidator to run
-    across multiple seeds and save results in the required format.
+    UPDATED: Accepts noise_sigma to group results correctly.
     
     Args:
         validator: TemporalFidelityValidator instance
         dataset_path: Path to synthetic programs dataset
         n_samples_per_seed: Number of programs to test per seed
         seeds: List of random seeds (default: [42, 123, 456, 789, 1011])
+        noise_sigma: Noise magnitude injected during inference (0.0 = Clean)
     
     Returns:
         Dictionary with aggregated statistics
@@ -450,7 +490,7 @@ def run_experiment_with_statistical_rigor(
     
     for seed in seeds:
         logger.info(f"\n{'='*60}")
-        logger.info(f"RUNNING SEED {seed} ({seeds.index(seed)+1}/{len(seeds)})")
+        logger.info(f"RUNNING SEED {seed} ({seeds.index(seed)+1}/{len(seeds)}) (Noise σ={noise_sigma})")
         logger.info(f"{'='*60}\n")
         
         # Set all random seeds for reproducibility
@@ -477,6 +517,7 @@ def run_experiment_with_statistical_rigor(
             mtrace_precision=mtrace_precision,
             shap_capability=shap_capability,
             overhead_ms=overhead_ms,
+            noise_sigma=noise_sigma,  # PASS NOISE PARAM
             additional_metrics={
                 "elapsed_time_seconds": elapsed_time,
                 "n_samples": n_samples_per_seed,
@@ -488,7 +529,7 @@ def run_experiment_with_statistical_rigor(
     
     # Aggregate results
     logger.info("\n" + "="*60)
-    logger.info("AGGREGATING RESULTS ACROSS ALL SEEDS")
+    logger.info(f"AGGREGATING RESULTS ACROSS ALL SEEDS (Noise σ={noise_sigma})")
     logger.info("="*60 + "\n")
     
     aggregated_df = stats.aggregate_all_seeds()
@@ -499,7 +540,7 @@ def run_experiment_with_statistical_rigor(
     shap_precision = [r["metrics"]["shap_temporal_precision"] for r in stats._load_all_seed_results()]
     
     significance_report = stats.generate_significance_report(
-        mtrace_precision, shap_precision, "temporal_precision"
+        mtrace_precision, shap_precision, "temporal_precision", noise_level=noise_sigma
     )
     print(significance_report)
     
@@ -510,7 +551,8 @@ def run_experiment_with_statistical_rigor(
         "aggregated_df": aggregated_df,
         "significance_report": significance_report,
         "latex_table": latex_table,
-        "all_seed_results": all_results
+        "all_seed_results": all_results,
+        "noise_sigma_used": noise_sigma
     }
 
 
@@ -523,4 +565,10 @@ if __name__ == "__main__":
     data_path = "t_trace/experiments/phase2/exp1/data/synthetic_programs_gt.pkl"
     
     validator = TemporalFidelityValidator(model_path, device=device)
-    results = run_experiment_with_statistical_rigor(validator, data_path)
+    
+    # Run both Clean (0.0) and Noisy (0.15) if needed
+    # 1. Clean Run
+    # results_clean = run_experiment_with_statistical_rigor(validator, data_path, noise_sigma=0.0)
+    
+    # 2. Noisy Run
+    results_noisy = run_experiment_with_statistical_rigor(validator, data_path, noise_sigma=0.15)

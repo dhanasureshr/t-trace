@@ -1,15 +1,16 @@
 {
   "seed": 42,
-  "timestamp": "2026-03-26T11:09:45.903582",
+  "timestamp": "2026-04-02T13:12:10.759576",
   "metrics": {
     "mtrace_temporal_precision": 1.0,
     "shap_temporal_precision": 0.0,
-    "mtrace_overhead_ms": 286.0139586002333,
-    "baseline_latency_ms": 251.6922835682053,
-    "overhead_percentage": 13.636363636363635
+    "mtrace_overhead_ms": 290.63692100025946,
+    "baseline_latency_ms": 255.76049048022833,
+    "overhead_percentage": 13.636363636363635,
+    "noise_sigma": 0.15
   },
   "additional_metrics": {
-    "elapsed_time_seconds": 1.4300697930011665,
+    "elapsed_time_seconds": 1.4531846050012973,
     "n_samples": 5,
     "raw_precision_values": [
       1,

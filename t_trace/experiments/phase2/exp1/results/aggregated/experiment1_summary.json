@@ -14,18 +14,18 @@
     "report": "1.000 \u00b1 0.000"
   },
   "overhead_ms": {
-    "mean": 1.0109360799469869,
-    "std": 0.03180345639909497,
-    "report": "1.01 \u00b1 0.03 ms"
+    "mean": 84.80954348022351,
+    "std": 115.06103293926928,
+    "report": "84.81 \u00b1 115.06 ms"
   },
   "overhead_percentage": {
     "mean": 13.636363636363635,
-    "std": 2.808666774861361e-15,
+    "std": 0.0,
     "report": "13.64 \u00b1 0.00 %"
   },
   "significance": {
     "test": "Welch's t-test (unequal variances)",
-    "t_statistic": "Infinity",
+    "t_statistic": Infinity,
     "p_value": 0.0,
     "significant": true,
     "cohens_d": 0.0,
