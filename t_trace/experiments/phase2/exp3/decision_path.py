@@ -124,7 +124,7 @@ def visualize_mtrace_decision_path(parquet_path, model, feature_names, tree_idx=
     ax.set_title(f"Decision Tree {tree_idx} | M-TRACE Path Fidelity", fontsize=14, pad=20, fontweight='bold')
     
     # 7. Save & Show
-    save_path = Path(save_dir) / f"mtrace_tree_path_t{tree_idx}.png"
+    save_path = Path(save_dir) / f"mtrace_tree_path_t{tree_idx}.pdf"
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     print(f"✅ Visualization saved to: {save_path}")
