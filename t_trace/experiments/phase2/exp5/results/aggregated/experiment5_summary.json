@@ -25,21 +25,21 @@
     "interpretation": "Negative = SHAP has higher utility; Positive = M-TRACE has higher utility"
   },
   "mtrace_cost_ms": {
-    "mean": 13.242,
-    "std": 0.4367150100465985,
-    "report": "13.242 \u00b1 0.437 ms"
+    "mean": 18.003999999999998,
+    "std": 10.918066678675304,
+    "report": "18.004 \u00b1 10.918 ms"
   },
   "shap_cost_ms": {
-    "mean": 1314.9540000000002,
-    "std": 54.7743879929297,
-    "report": "1314.954 \u00b1 54.774 ms"
+    "mean": 1301.0800000000002,
+    "std": 41.45730333728911,
+    "report": "1301.080 \u00b1 41.457 ms"
   },
   "cost_comparison_test": {
     "test": "Welch's t-test (one-sided, M-TRACE < SHAP)",
-    "t_statistic": -53.13841222910394,
-    "p_value": 3.748209352491665e-07,
+    "t_statistic": -66.92293907956963,
+    "p_value": 2.7231816316702925e-08,
     "significant": true,
-    "cohens_d": -33.60768277778272
+    "cohens_d": -42.325783040826494
   },
   "utility_comparison_test": {
     "test": "Welch's t-test (two-sided)",

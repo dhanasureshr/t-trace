@@ -1,42 +1,42 @@
 {
   "seed": 42,
-  "timestamp": "2026-04-02T17:02:36.094079",
+  "timestamp": "2026-04-03T10:10:35.605411",
   "metrics": {
-    "mtrace_cost_ms": 12.7,
-    "shap_cost_ms": 1269.24,
+    "mtrace_cost_ms": 37.53,
+    "shap_cost_ms": 1282.17,
     "mtrace_info_gain": 0.0,
     "shap_info_gain": 1.0,
-    "cost_ratio": 0.01,
+    "cost_ratio": 0.03,
     "utility_diff": -1.0
   },
   "additional_metrics": {
     "seed": 42,
-    "experiment_id": "exp5_static_3fa23ed4",
-    "timestamp": 1775129556.0934274,
+    "experiment_id": "exp5_static_79b67391",
+    "timestamp": 1775191235.604749,
     "task_type": "Static Aggregation (Breast Cancer)",
     "model_type": "mlp",
     "metrics": {
       "mtrace": {
-        "train_time_sec": 0.0329,
-        "inference_latency_ms": 0.42,
-        "disk_write_time_ms": 4.46,
-        "parse_load_time_ms": 7.82,
-        "total_cost_ms": 12.7,
-        "peak_memory_kb": 427.83,
+        "train_time_sec": 0.0353,
+        "inference_latency_ms": 0.43,
+        "disk_write_time_ms": 17.05,
+        "parse_load_time_ms": 20.05,
+        "total_cost_ms": 37.53,
+        "peak_memory_kb": 435.28,
         "found_root_cause": false,
         "information_gain": 0.0,
         "logs_captured_count": 2
       },
       "shap": {
-        "total_analysis_time_ms": 1269.24,
-        "peak_memory_kb": 101071.58,
+        "total_analysis_time_ms": 1282.17,
+        "peak_memory_kb": 101071.65,
         "found_root_cause": true,
         "information_gain": 1.0,
         "samples_explained": 5
       },
       "comparative": {
         "utility_diff": -1.0,
-        "cost_ratio": 0.01,
+        "cost_ratio": 0.03,
         "utilities_similar": false,
         "mtrace_more_efficient": true,
         "conclusion": "UTILITY DIFFERENCE DETECTED (Investigate model compatibility)"

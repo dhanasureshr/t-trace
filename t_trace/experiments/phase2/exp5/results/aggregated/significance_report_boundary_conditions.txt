@@ -5,13 +5,13 @@ STATISTICAL SIGNIFICANCE REPORT: Experiment 5 (Boundary Conditions)
 
 TEST 1: Computational Cost Comparison (M-TRACE vs SHAP)
 ----------------------------------------------------------------------
-M-TRACE Cost: 13.242 ± 0.437 ms
-SHAP Cost:    1314.954 ± 54.774 ms
+M-TRACE Cost: 18.004 ± 10.918 ms
+SHAP Cost:    1301.080 ± 41.457 ms
 Welch's t-test Results (one-sided, M-TRACE < SHAP):
-  t(8) = -53.138
-  p-value = 3.7482e-07
+  t(8) = -66.923
+  p-value = 2.7232e-08
   M-TRACE significantly cheaper: ✅ YES
-  Effect Size (Cohen's d): -33.608 (large)
+  Effect Size (Cohen's d): -42.326 (large)
 
 TEST 2: Diagnostic Utility Comparison (M-TRACE vs SHAP)
 ----------------------------------------------------------------------
@@ -26,7 +26,7 @@ Welch's t-test Results (two-sided):
 ======================================================================
 INTERPRETATION:
   For static aggregation tasks (e.g., shallow MLP on tabular data):
-  • M-TRACE is significantly more efficient (cost: 13.24ms vs 1314.95ms)
+  • M-TRACE is significantly more efficient (cost: 18.00ms vs 1301.08ms)
   • Diagnostic utilities are similar (p=7.048e-02)
   • This validates the boundary condition: temporal trajectory data is redundant
     for tasks without sequential reasoning, where post-hoc tools suffice.

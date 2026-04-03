@@ -214,7 +214,7 @@ def run_single_seed_experiment(
     tracemalloc.stop()
     
     # Save logs to disk
-    storage_dir = Path(logs_dir) / "experiment_5"
+    storage_dir = Path(logs_dir)
     storage_dir.mkdir(parents=True, exist_ok=True)
     
     storage_engine = get_storage_engine(backend="local", config={"storage_dir": str(storage_dir)})
