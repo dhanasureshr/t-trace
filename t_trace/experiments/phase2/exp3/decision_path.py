@@ -10,10 +10,126 @@ from sklearn.metrics import accuracy_score
 import shap
 import glob
 
+from sklearn.tree import plot_tree
+
 # Add project root to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))) 
 
 from t_trace.logging_engine import enable_logging
+
+import matplotlib.pyplot as plt
+import re
+from pathlib import Path
+
+def visualize_mtrace_decision_path(parquet_path, model, feature_names, tree_idx=0, save_dir="t_trace/experiments/phase2/exp3/results/figures"):
+    import matplotlib.patches as mpatches
+    print("\n🌳 Generating M-TRACE Tree Visualization...")
+    
+    # 1. Load logs
+    try:
+        df = pd.read_parquet(parquet_path)
+    except Exception as e:
+        print(f"❌ Failed to load Parquet: {e}")
+        return
+
+    df_pred = df[df['event_type'] == 'predict']
+    if df_pred.empty:
+        print("⚠️ No prediction events found in logs.")
+        return
+
+    # 2. Extract decision path strings
+    raw_paths = df_pred.iloc[1]['internal_states']['decision_paths'] # Kept your fix
+    if hasattr(raw_paths, 'tolist'): raw_paths = raw_paths.tolist()
+    if not isinstance(raw_paths, list): raw_paths = [raw_paths]
+
+    # 3. Parse node sequence for target tree
+    path_nodes = []
+    for step in raw_paths:
+        if not isinstance(step, str): continue
+        t_match = re.search(r'Tree\[(\d+)\]', step)
+        n_match = re.search(r'Node\[(\d+)\]', step)
+        if t_match and n_match and int(t_match.group(1)) == tree_idx:
+            path_nodes.append(int(n_match.group(1)))
+
+    if not path_nodes:
+        print("⚠️ Could not extract valid path from logs.")
+        return
+
+    print(f"📍 Reconstructed M-TRACE Path (Tree {tree_idx}): {path_nodes}")
+
+    # 4. Plot tree
+    Path(save_dir).mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(14, 8))
+    
+    plot_tree(model.estimators_[tree_idx],
+              feature_names=feature_names,
+              filled=True, rounded=True, fontsize=10, 
+              ax=ax, impurity=False, proportion=True)
+
+    # 🔑 FORCE RENDER to populate ax.patches in headless environments
+    plt.draw()
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+
+    # 5. Robust Patch Extraction (No strict isinstance filtering)
+    node_patches = [p for p in ax.patches if p.get_visible() and hasattr(p, 'set_edgecolor')]
+    print(f"🔍 Found {len(node_patches)} visual node patches.")
+
+    # Map logged IDs -> visual patches (BFS order matches internal indices)
+    patch_map = {i: patch for i, patch in enumerate(node_patches)}
+    
+    highlighted_count = 0
+    if len(node_patches) > 0:
+        # Reset all borders first
+        for patch in node_patches:
+            patch.set_edgecolor('#cbd5e1')
+            patch.set_linewidth(1.5)
+
+        # Highlight path nodes
+        for i, node_idx in enumerate(path_nodes):
+            if node_idx in patch_map:
+                patch = patch_map[node_idx]
+                patch.set_edgecolor('#ef4444')
+                patch.set_linewidth(4.0)
+                if i == len(path_nodes) - 1:  # Leaf node
+                    patch.set_facecolor('#fecaca')
+                highlighted_count += 1
+            else:
+                print(f"⚠️ Warning: Logged node ID {node_idx} not in visual tree.")
+    else:
+        # 🛡️ FALLBACK: Highlight using text positions if patches fail to render
+        print("⚠️ Fallback: Highlighting via ax.texts positions...")
+        for i, node_idx in enumerate(path_nodes):
+            if node_idx < len(ax.texts):
+                txt = ax.texts[node_idx]
+                x, y = txt.get_position()
+                highlight = mpatches.FancyBboxPatch(
+                    (x - 0.045, y - 0.025), 0.09, 0.05,
+                    boxstyle="round,pad=0.005",
+                    facecolor='#fecaca' if i == len(path_nodes)-1 else '#fff1f2',
+                    edgecolor='#ef4444', linewidth=4.0, zorder=10
+                )
+                ax.add_patch(highlight)
+                highlighted_count += 1
+
+    print(f"✅ Successfully highlighted {highlighted_count}/{len(path_nodes)} nodes.")
+
+    # 6. Add path annotation
+    path_label = " → ".join([f"Node {n}" for n in path_nodes])
+    ax.text(0.02, 0.98, f"M-TRACE Trajectory:\n{path_label}",
+            transform=ax.transAxes, fontsize=11, fontweight='bold',
+            verticalalignment='top', horizontalalignment='left',
+            bbox=dict(boxstyle='round', facecolor='#f8fafc', edgecolor='#3b82f6', alpha=0.95, linewidth=1.5))
+
+    ax.set_title(f"Decision Tree {tree_idx} | M-TRACE Path Fidelity", fontsize=14, pad=20, fontweight='bold')
+    
+    # 7. Save & Show
+    save_path = Path(save_dir) / f"mtrace_tree_path_t{tree_idx}.png"
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    print(f"✅ Visualization saved to: {save_path}")
+    #plt.show()
+
 
 def preprocess_data(df, target_col='class'):
     print("🧹 Preprocessing data...")
@@ -171,7 +287,7 @@ def run_experiment():
         return
 
     # Inject Bias into Model
-    success_result = inject_bias_guaranteed(model_to_use, X_subset, feature_idx=feature_idx, tree_index=0)
+    success_result = inject_bias_guaranteed(model_to_use, X_subset, feature_idx=feature_idx, tree_index=1)
     if not success_result[0]:
         print("❌ Bias injection failed.")
         return
@@ -285,10 +401,21 @@ def run_experiment():
         print("\n⚠️ No bias detected even in targeted samples.")
         print(f"   Total Logs Analyzed: {len(df_predict)}")
         if len(df_predict) > 0:
-            first_paths = df_predict.iloc[0]['internal_states']['decision_paths']
+            first_paths = df_predict.iloc[1]['internal_states']['decision_paths']
             if hasattr(first_paths, 'tolist'): first_paths = first_paths.tolist()
             if first_paths:
                 print(f"   Example Path: {first_paths[0]}")
+
+
+    # === ADD THIS VISUALIZATION CALL ===
+    visualize_mtrace_decision_path(
+        parquet_path=parquet_file,
+        model=model_to_use,  # Wrapped RandomForest still has .estimators_
+        feature_names=feature_names,
+        tree_idx=0,
+        save_dir="t_trace/experiments/phase2/exp3/results/figures"
+    )
+    # ================================
 
     print("\n⚖️ Generating TreeSHAP Baseline...")
     explainer = shap.TreeExplainer(model_to_use) 
