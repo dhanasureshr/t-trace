@@ -2,5 +2,5 @@ metric,mean,std,n_seeds
 M-TRACE Path Reconstruction Accuracy,0.8,0.27386127875258304,5
 Bias Detection Rate,1.0,0.0,5
 TreeSHAP Path Coverage,0.0,0.0,5
-Inference Overhead (ms),14.591922418658214,22.951746612072526,5
-Training Overhead (%),11.111111111111104,3.552713678800501e-15,5
+Inference Overhead (ms),14.411222352873665,22.687481566324056,5
+Training Overhead (%),11.111111111111107,5.102196573270515e-15,5
