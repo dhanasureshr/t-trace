@@ -28,6 +28,7 @@ def visualize_mtrace_decision_path_paper(
     feature_names, 
     X_trigger=None, 
     tree_idx=0, 
+    bias_node_idx =None,
     save_dir="t_trace/experiments/phase2/exp3/results/figures"
 ):
     import matplotlib.pyplot as plt
@@ -134,13 +135,21 @@ def visualize_mtrace_decision_path_paper(
                     min_dist = dist
                     closest_patch = p
             
+            # Highlighting loop (modify inside the node matching block):
             if closest_patch:
-                closest_patch.set_edgecolor('#ef4444') # Red
-                closest_patch.set_linewidth(3.0)
-                if node_idx == path_nodes[-1]:
-                    closest_patch.set_facecolor('#fecaca') # Light Red for leaf
-                highlighted_count += 1
+                if node_idx == bias_node_idx:  # ← EXPLICIT BIAS MARKER
+                    closest_patch.set_edgecolor('#D32F2F')  # Deep Red
+                    closest_patch.set_linewidth(4.0)
+                    closest_patch.set_facecolor('#FFCDD2')  # Light Red
+                    # Add "BIAS" label directly on the node
+                    ax_tree.text(px, py, "BIAS", color='white', 
+                                ha='center', va='center', fontsize=7, fontweight='bold')
+                else:
+                    closest_patch.set_edgecolor('#2E86AB')  # Blue for normal path
+                    closest_patch.set_linewidth(2.5)
 
+
+    
     print(f"✅ Highlighted {highlighted_count} nodes.")
     
     ax_tree.set_title(f"Tree {tree_idx} (M-TRACE Path)", fontsize=11, fontweight='bold')
@@ -178,10 +187,11 @@ def visualize_mtrace_decision_path_paper(
 
     # --- GLOBAL ANNOTATIONS (Outside the plots to save space) ---
     path_str = " → ".join([f"Node {n}" for n in path_nodes])
+    bias_note = f" | Bias injected at Node {bias_node_idx}" if bias_node_idx is not None else ""
     
     # Add a dedicated text box at the bottom of the figure
     fig.text(
-        0.5, 0.05, f"M-TRACE Detected Path: {path_str}",
+        0.5, 0.05, f"M-TRACE Detected Path: {path_str}{bias_note}",
         ha='center', va='center', fontsize=11, fontweight='bold', color='#1e293b',
         bbox=dict(boxstyle='round,pad=0.5', facecolor='#f1f5f9', edgecolor='#94a3b8', alpha=0.9)
     )
@@ -489,6 +499,7 @@ def run_experiment():
         feature_names=feature_names,
         X_trigger=X_trigger,  # <-- ADDED: Provides sample for SHAP
         tree_idx=0,
+        bias_node_idx=target_node,  # <-- ADDED: Highlights the bias node in red
         save_dir="t_trace/experiments/phase2/exp3/results/figures"
     )
     # ================================
