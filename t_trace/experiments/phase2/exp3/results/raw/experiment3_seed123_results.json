@@ -1,16 +1,16 @@
 {
   "seed": 123,
-  "timestamp": "2026-04-03T10:29:00.362020",
+  "timestamp": "2026-04-04T12:18:05.843190",
   "metrics": {
     "mtrace_path_reconstruction_accuracy": 1.0,
     "bias_detection_rate": 1.0,
     "treeshap_path_coverage": 0.0,
-    "inference_overhead_ms": 54.531487800068135,
-    "training_overhead_percentage": 11.111111111111114,
+    "inference_overhead_ms": 53.995789900818636,
+    "training_overhead_percentage": 11.11111111111111,
     "total_samples_tested": 1
   },
   "additional_metrics": {
-    "run_id": "9df1a95d-e4d5-429a-9858-6eafff025cd4",
+    "run_id": "47b2c73c-5fce-4042-9883-e0a67b5ad43a",
     "total_paths_analyzed": 1,
     "bias_injected": {
       "target_tree": 0,

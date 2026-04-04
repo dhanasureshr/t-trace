@@ -351,7 +351,7 @@ def run_experiment():
         return
 
     # Inject Bias into Model
-    success_result = inject_bias_guaranteed(model_to_use, X_subset, feature_idx=feature_idx, tree_index=1)
+    success_result = inject_bias_guaranteed(model_to_use, X_subset, feature_idx=feature_idx, tree_index=0)
     if not success_result[0]:
         print("❌ Bias injection failed.")
         return

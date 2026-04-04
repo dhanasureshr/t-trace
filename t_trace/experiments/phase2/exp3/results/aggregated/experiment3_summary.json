@@ -25,13 +25,13 @@
     "note": "TreeSHAP computes Shapley values, not decision paths (structurally impossible)"
   },
   "inference_overhead_ms": {
-    "mean": 14.411222352873665,
-    "std": 22.687481566324056,
-    "report": "14.411 \u00b1 22.687 ms"
+    "mean": 14.306487444459242,
+    "std": 22.445722081785824,
+    "report": "14.306 \u00b1 22.446 ms"
   },
   "training_overhead_percentage": {
-    "mean": 11.111111111111107,
-    "std": 5.102196573270515e-15,
+    "mean": 11.111111111111105,
+    "std": 5.4025784115714076e-15,
     "report": "11.111 (std=0.000) %"
   },
   "significance": {
