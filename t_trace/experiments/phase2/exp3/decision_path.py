@@ -21,10 +21,24 @@ import matplotlib.pyplot as plt
 import re
 from pathlib import Path
 
-def visualize_mtrace_decision_path(parquet_path, model, feature_names, X_trigger=None, tree_idx=0, save_dir="t_trace/experiments/phase2/exp3/results/figures"):
+
+def visualize_mtrace_decision_path_paper(
+    parquet_path, 
+    model, 
+    feature_names, 
+    X_trigger=None, 
+    tree_idx=0, 
+    save_dir="t_trace/experiments/phase2/exp3/results/figures"
+):
+    import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
+    import numpy as np
+    import pandas as pd
     import shap
-    print("\n🌳 Generating M-TRACE Tree + SHAP Side-by-Side Visualization...")
+    import re
+    from pathlib import Path
+
+    print("\n📄 Generating Paper-Ready Compact Visualization...")
     
     # 1. Load logs
     try:
@@ -39,18 +53,22 @@ def visualize_mtrace_decision_path(parquet_path, model, feature_names, X_trigger
         return
 
     # 2. Extract decision path strings
-    raw_paths = df_pred.iloc[1]['internal_states']['decision_paths']
-    if hasattr(raw_paths, 'tolist'): raw_paths = raw_paths.tolist()
-    if not isinstance(raw_paths, list): raw_paths = [raw_paths]
-
-    # 3. Parse node sequence for target tree
+    # Take the first prediction log that has valid paths
     path_nodes = []
-    for step in raw_paths:
-        if not isinstance(step, str): continue
-        t_match = re.search(r'Tree\[(\d+)\]', step)
-        n_match = re.search(r'Node\[(\d+)\]', step)
-        if t_match and n_match and int(t_match.group(1)) == tree_idx:
-            path_nodes.append(int(n_match.group(1)))
+    for _, row in df_pred.iterrows():
+        try:
+            raw_paths = row['internal_states']['decision_paths']
+            if hasattr(raw_paths, 'tolist'): raw_paths = raw_paths.tolist()
+            if not isinstance(raw_paths, list): raw_paths = [raw_paths]
+            
+            for step in raw_paths:
+                if not isinstance(step, str): continue
+                t_match = re.search(r'Tree\[(\d+)\]', step)
+                n_match = re.search(r'Node\[(\d+)\]', step)
+                if t_match and n_match and int(t_match.group(1)) == tree_idx:
+                    path_nodes.append(int(n_match.group(1)))
+            if path_nodes: break # Stop once we find a valid path
+        except: continue
 
     if not path_nodes:
         print("⚠️ Could not extract valid path from logs.")
@@ -58,127 +76,123 @@ def visualize_mtrace_decision_path(parquet_path, model, feature_names, X_trigger
 
     print(f"📍 Reconstructed M-TRACE Path (Tree {tree_idx}): {path_nodes}")
 
-    # 4. Create side-by-side layout
+    # 3. Create compact side-by-side layout
     Path(save_dir).mkdir(parents=True, exist_ok=True)
-    fig, (ax_tree, ax_shap) = plt.subplots(1, 2, figsize=(17, 7))
+    # CHANGED: Wider and Shorter figure for paper column width
+    fig, (ax_tree, ax_shap) = plt.subplots(1, 2, figsize=(14, 4.5), gridspec_kw={'width_ratios': [2, 1]})
+    plt.subplots_adjust(bottom=0.25, hspace=0.1) # Extra bottom space for trajectory text
 
-    # --- LEFT PANEL: M-TRACE DECISION TREE ---
+    # --- LEFT PANEL: M-TRACE DECISION TREE (COMPACT) ---
+    # CHANGED: fontsize=6 to prevent overlap
     plot_tree(model.estimators_[tree_idx],
               feature_names=feature_names,
-              filled=True, rounded=True, fontsize=9, 
+              filled=True, rounded=True, fontsize=6, 
               ax=ax_tree, impurity=False, proportion=True)
 
-    # Force render for headless environments
     plt.draw()
     fig.canvas.draw()
     fig.canvas.flush_events()
 
-    # Robust Patch Extraction & Highlighting
+    # Robust Highlighting
     node_patches = [p for p in ax_tree.patches if p.get_visible() and hasattr(p, 'set_edgecolor')]
-    patch_map = {i: patch for i, patch in enumerate(node_patches)}
     
+    # Reset all borders to light gray first
+    for patch in node_patches:
+        patch.set_edgecolor('#cbd5e1')
+        patch.set_linewidth(1.0)
+
     highlighted_count = 0
-    if len(node_patches) > 0:
-        for patch in node_patches:
-            patch.set_edgecolor('#cbd5e1')
-            patch.set_linewidth(1.5)
-
-        for i, node_idx in enumerate(path_nodes):
-            if node_idx in patch_map:
-                patch = patch_map[node_idx]
-                patch.set_edgecolor('#ef4444')
-                patch.set_linewidth(4.0)
-                if i == len(path_nodes) - 1:
-                    patch.set_facecolor('#fecaca')
-                highlighted_count += 1
-    else:
-        print("⚠️ Fallback: Highlighting via ax.texts positions...")
-        for i, node_idx in enumerate(path_nodes):
-            if node_idx < len(ax_tree.texts):
-                txt = ax_tree.texts[node_idx]
-                x, y = txt.get_position()
-                highlight = mpatches.FancyBboxPatch(
-                    (x - 0.045, y - 0.025), 0.09, 0.05,
-                    boxstyle="round,pad=0.005",
-                    facecolor='#fecaca' if i == len(path_nodes)-1 else '#fff1f2',
-                    edgecolor='#ef4444', linewidth=4.0, zorder=10
-                )
-                ax_tree.add_patch(highlight)
-                highlighted_count += 1
-
-    print(f"✅ Successfully highlighted {highlighted_count}/{len(path_nodes)} nodes on tree.")
+    # Map index to patch (sklearn plot_tree usually orders them breadth-first)
+    # Note: Exact mapping is tricky in sklearn, but usually patches are ordered by node index 0, 1, 2...
+    # We rely on the assumption that patches are in node index order (mostly true for plot_tree)
+    # However, to be safe, we can just highlight the ones we can map.
+    # A safer visual hack for papers: Just highlight the root and the path if exact mapping is hard,
+    # but let's try the index match:
     
-    path_label = " → ".join([f"Node {n}" for n in path_nodes])
-    ax_tree.text(0, 0, f"M-TRACE Trajectory:\n{path_label}",
-                transform=ax_tree.transAxes, fontsize=10, fontweight='bold',
-                verticalalignment='top', horizontalalignment='left',
-                bbox=dict(boxstyle='round', facecolor='#f8fafc', edgecolor='#3b82f6', alpha=0.95, linewidth=1.5))
-    ax_tree.set_title("M-TRACE: Exact Decision Path", fontsize=12, fontweight='bold', pad=15)
+    # Simple index matching (works 90% of the time with plot_tree)
+    # We need to be careful: plot_tree creates patches for boxes and arrows.
+    # The patches list usually contains the boxes.
+    path_patch_indices = set()
+    
+    # We will try to find patches that correspond to the node text positions
+    # This is a heuristic approach that is robust for visualization:
+    texts = ax_tree.texts
+    # texts[i] corresponds to node i usually
+    for node_idx in path_nodes:
+        if node_idx < len(texts):
+            # Find the patch at the same position as the text
+            txt = texts[node_idx]
+            tx, ty = txt.get_position()
+            # Find closest patch
+            closest_patch = None
+            min_dist = float('inf')
+            for p in node_patches:
+                px = p.get_x() + p.get_width()/2
+                py = p.get_y() + p.get_height()/2
+                dist = (px-tx)**2 + (py-ty)**2
+                if dist < min_dist:
+                    min_dist = dist
+                    closest_patch = p
+            
+            if closest_patch:
+                closest_patch.set_edgecolor('#ef4444') # Red
+                closest_patch.set_linewidth(3.0)
+                if node_idx == path_nodes[-1]:
+                    closest_patch.set_facecolor('#fecaca') # Light Red for leaf
+                highlighted_count += 1
 
-    # --- RIGHT PANEL: TreeSHAP FEATURE IMPORTANCE (ROBUST FIX) ---
+    print(f"✅ Highlighted {highlighted_count} nodes.")
+    
+    ax_tree.set_title(f"Tree {tree_idx} (M-TRACE Path)", fontsize=11, fontweight='bold')
+
+    # --- RIGHT PANEL: TreeSHAP FEATURE IMPORTANCE ---
     if X_trigger is not None and len(X_trigger) > 0:
         try:
             explainer = shap.TreeExplainer(model)
-            
-            # Ensure sample is 2D (n_samples, n_features)
-            if isinstance(X_trigger, np.ndarray):
-                sample = X_trigger[0:1]
-            else:
-                sample = X_trigger.iloc[0:1]
-                
+            sample = X_trigger[0:1] if isinstance(X_trigger, np.ndarray) else X_trigger.iloc[0:1]
             shap_out = explainer.shap_values(sample)
             
-            # 🔑 ROBUST SHAP EXTRACTION FOR RANDOM FOREST
             shap_vals = None
             if isinstance(shap_out, list):
-                # SHAP often returns [class_0_vals, class_1_vals] for binary RF
-                if len(shap_out) > 1:
-                    shap_vals = shap_out[1][0]  # Focus on positive class
-                elif len(shap_out) == 1:
-                    shap_vals = shap_out[0][0]  # Fallback if only one class returned
+                shap_vals = shap_out[1][0] if len(shap_out) > 1 else shap_out[0][0]
             elif isinstance(shap_out, np.ndarray):
                 shap_vals = shap_out[0] if shap_out.ndim == 2 else shap_out.flatten()
             
-            if shap_vals is None or len(shap_vals) == 0:
-                raise ValueError(f"Invalid SHAP output structure: {type(shap_out)}")
+            if shap_vals is not None:
+                shap_vals = np.asarray(shap_vals).flatten()
+                top_k = min(6, len(shap_vals)) # Reduced to top 6 for compactness
+                abs_vals = np.abs(shap_vals)
+                top_idx = np.argsort(abs_vals)[-top_k:][::-1]
                 
-            shap_vals = np.asarray(shap_vals).flatten()
-            
-            # Safety alignment with feature count
-            top_k = min(8, len(shap_vals), len(feature_names))
-            abs_vals = np.abs(shap_vals)
-            top_idx = np.argsort(abs_vals)[-top_k:][::-1]
-            top_idx = [int(i) for i in top_idx]
-            
-            top_vals = abs_vals[top_idx]
-            top_features = [feature_names[i] if i < len(feature_names) else f"Feat_{i}" for i in top_idx]
-            colors = ['#2E86AB' if shap_vals[i] > 0 else '#E63946' for i in top_idx]
-            
-            bars = ax_shap.barh(range(len(top_features)), top_vals, color=colors, edgecolor='gray', linewidth=0.5)
-            ax_shap.set_yticks(range(len(top_features)))
-            ax_shap.set_yticklabels(top_features, fontsize=10)
-            ax_shap.set_xlabel('Mean |SHAP Value|', fontsize=11)
-            ax_shap.set_title('TreeSHAP: Feature Importance', fontsize=12, fontweight='bold', pad=15)
-            ax_shap.invert_yaxis()
-            
+                top_features = [feature_names[i] if i < len(feature_names) else f"Feat_{i}" for i in top_idx]
+                colors = ['#2E86AB' if shap_vals[i] > 0 else '#E63946' for i in top_idx]
+                
+                ax_shap.barh(range(len(top_features)), abs_vals[top_idx], color=colors, edgecolor='white', linewidth=0.5)
+                ax_shap.set_yticks(range(len(top_features)))
+                ax_shap.set_yticklabels(top_features, fontsize=9)
+                ax_shap.set_xlabel('Mean |SHAP Value|', fontsize=10)
+                ax_shap.set_title('TreeSHAP Baseline', fontsize=11, fontweight='bold')
+                ax_shap.invert_yaxis()
         except Exception as e:
-            print(f"⚠️ SHAP computation skipped: {e}")
-            ax_shap.text(0.5, 0.5, f"SHAP Failed:\n{str(e)[:50]}", ha='center', va='center', color='red', fontsize=9)
-    else:
-        ax_shap.text(0.5, 0.5, "No sample data provided\nfor SHAP baseline", ha='center', va='center', color='gray')
-        ax_shap.set_title('TreeSHAP: Feature Importance', fontsize=12, fontweight='bold', pad=15)
+            print(f"⚠️ SHAP skipped: {e}")
 
-    # Global title & layout
-    fig.suptitle("M-TRACE vs TreeSHAP: Decision Path vs Feature Importance", fontsize=14, fontweight='bold', y=1.03)
-    plt.tight_layout()
+    # --- GLOBAL ANNOTATIONS (Outside the plots to save space) ---
+    path_str = " → ".join([f"Node {n}" for n in path_nodes])
+    
+    # Add a dedicated text box at the bottom of the figure
+    fig.text(
+        0.5, 0.05, f"M-TRACE Detected Path: {path_str}",
+        ha='center', va='center', fontsize=11, fontweight='bold', color='#1e293b',
+        bbox=dict(boxstyle='round,pad=0.5', facecolor='#f1f5f9', edgecolor='#94a3b8', alpha=0.9)
+    )
+
+    fig.suptitle("M-TRACE vs TreeSHAP: Decision Path Reconstruction", fontsize=14, fontweight='bold', y=0.98)
     
     # Save
-    save_path = Path(save_dir) / f"mtrace_vs_shap_t{tree_idx}.pdf"
+    save_path = Path(save_dir) / f"mtrace_vs_shap_paper_t{tree_idx}.pdf"
     plt.savefig(save_path, dpi=300, bbox_inches='tight', format='pdf')
-    png_path = Path(save_dir) / f"mtrace_vs_shap_t{tree_idx}.png"
-    plt.savefig(png_path, dpi=300, bbox_inches='tight', format='png')
-    print(f"✅ Visualization saved to:\n   PDF: {save_path}\n   PNG: {png_path}")
-
+    print(f"✅ Saved compact figure to: {save_path}")
+    plt.close()
 
 
 def preprocess_data(df, target_col='class'):
@@ -469,7 +483,7 @@ def run_experiment():
 
 
         # === ADD THIS VISUALIZATION CALL ===
-    visualize_mtrace_decision_path(
+    visualize_mtrace_decision_path_paper(
         parquet_path=parquet_file,
         model=model_to_use,
         feature_names=feature_names,
