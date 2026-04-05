@@ -33,23 +33,20 @@ def visualize_bias_path_comparison(
     save_path: str = "results/fig3_qualitative_comparison.pdf"
 ):
     """
-    Publication-ready side-by-side visualization.
-    LEFT: Draws ONLY the exact traversed path (no full tree clutter).
-    RIGHT: TreeSHAP baseline (unchanged robust implementation).
+    Publication-compact side-by-side visualization.
+    Optimized for two-column papers (~9.5x3.8 inches).
     """
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7), 
+    # Compact figure size standard for ACM/IEEE/NeurIPS
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.5, 3.8), 
                                    gridspec_kw={'width_ratios': [1.1, 0.9]})
     
-    # === LEFT PANEL: Exact Path Only (Flowchart Style) ===
-    ax1.set_title("M-TRACE: Exact Decision Path Reconstruction\n(Only Traversed Nodes Shown)", 
-                  fontsize=13, fontweight='bold', pad=15)
+    # === LEFT PANEL: Compact Flowchart (Dynamic Scaling) ===
+    ax1.set_title("M-TRACE: Exact Decision Path", fontsize=11, fontweight='bold', pad=8)
     
-    # 1. Parse exact path nodes for the target tree
     path_nodes = []
     for step in bias_path:
         if f"Tree[{target_tree}]" in step:
             try:
-                # Format: "Tree[0]:Node[3]->age(<=17.5):Left"
                 node_str = step.split("->")[0].split(":")[1]
                 node_id = int(node_str.replace("Node[", "").replace("]", ""))
                 path_nodes.append(node_id)
@@ -57,7 +54,7 @@ def visualize_bias_path_comparison(
                 continue
                 
     if not path_nodes:
-        ax1.text(0.5, 0.5, "No path data found", ha='center', va='center', fontsize=12)
+        ax1.text(0.5, 0.5, "No path data", ha='center', va='center', fontsize=10)
         plt.tight_layout()
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
         plt.show()
@@ -66,125 +63,91 @@ def visualize_bias_path_comparison(
     tree = model.estimators_[target_tree].tree_
     n_nodes = len(path_nodes)
     
-    # Layout configuration
-    box_w, box_h = 0.55, 0.16
-    y_start = 0.92
-    y_step = 0.24
+    # Dynamic scaling to fit ANY path length in fixed height
+    box_w, box_h = 0.65, 0.09
+    y_step = 0.85 / max(n_nodes, 2)  # Auto-scale vertical spacing
+    y_start = 0.90
     x_center = 0.5
     
-    # Draw nodes & edges sequentially
     for i, node_id in enumerate(path_nodes):
         y_pos = y_start - i * y_step
         
-        # Extract split rule
         feat_idx = tree.feature[node_id]
         threshold = tree.threshold[node_id]
         feat_name = feature_names[feat_idx] if feature_names and feat_idx < len(feature_names) else f"Feat_{feat_idx}"
-        condition = f"{feat_name} ≤ {threshold:.2f}"
+        condition = f"{feat_name} ≤ {threshold:.1f}"
         
-        # Determine direction to next node
         is_leaf = tree.children_left[node_id] == _tree.TREE_LEAF
         direction = "LEAF" if is_leaf else ("LEFT" if i < n_nodes-1 and path_nodes[i+1] == tree.children_left[node_id] else "RIGHT")
         
-        # Node styling
         is_bias = (node_id == bias_node)
         face_color = "#FFC0CB" if is_bias else ("#FEEBCE" if i == n_nodes-1 else "white")
         edge_color = "#D62728" if is_bias else "#2E86AB"
-        lw = 2.5 if is_bias else 1.8
+        lw = 2.0 if is_bias else 1.5
         
         rect = mpatches.FancyBboxPatch(
             (x_center - box_w/2, y_pos - box_h/2), box_w, box_h,
-            boxstyle="round,pad=0.03", facecolor=face_color,
+            boxstyle="round,pad=0.02", facecolor=face_color,
             edgecolor=edge_color, linewidth=lw, zorder=3
         )
         ax1.add_patch(rect)
         
-        # Node text
-        ax1.text(x_center, y_pos, f"N{node_id}\n{condition}\n→ {direction}",
-                 ha='center', va='center', fontsize=9, 
-                 fontweight='bold' if is_bias else 'normal')
+        # Horizontal text layout
+        ax1.text(x_center, y_pos, f"N{node_id} | {condition} | → {direction}",ha='center', va='center', fontsize=8, fontweight='bold')
         
-        # Bias annotation
         if is_bias:
-            ax1.text(x_center + box_w/2 + 0.04, y_pos, "⚠️ BIAS TRIGGERED",
-                     ha='left', va='center', fontsize=10, fontweight='bold', color='#D62728')
+            ax1.text(x_center + box_w/2 + 0.03, y_pos, "⚠️ BIAS",
+                     ha='left', va='center', fontsize=8, fontweight='bold', color='#D62728')
             
-        # Arrow to next node
         if i < n_nodes - 1:
             next_y = y_start - (i+1) * y_step
             ax1.annotate("", xy=(x_center, next_y + box_h/2), xytext=(x_center, y_pos - box_h/2),
-                         arrowprops=dict(arrowstyle="->", color="#D62728", lw=2, 
-                                         shrinkA=8, shrinkB=8, mutation_scale=15))
+                         arrowprops=dict(arrowstyle="->", color="#D62728", lw=1.5, 
+                                         shrinkA=6, shrinkB=6, mutation_scale=12))
             
     ax1.set_xlim(0, 1)
-    ax1.set_ylim(y_start - n_nodes * y_step - 0.1, y_start + 0.1)
+    ax1.set_ylim(0, 1)
     ax1.axis('off')
     
-    # Metric box
-    props = dict(boxstyle='round,pad=0.4', facecolor='white', alpha=1.0, edgecolor='black', linewidth=1.5)
-    ax1.text(0.98, 0.98, "Path Coverage: 100%\nBias Detection: ✓\nTemporal Fidelity: ✓", 
-             transform=ax1.transAxes, fontsize=9, verticalalignment='top', 
-             horizontalalignment='right', bbox=props)
+    # Compact metric badge
+    props = dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.95, edgecolor='#333', linewidth=1)
+    
+   
 
-    # === RIGHT PANEL: TreeSHAP Baseline (Robust Implementation) ===
-    ax2.set_title("TreeSHAP: Post-Hoc Feature Attribution\n(Shows 'What', NOT 'How' or 'Where')", 
-                  fontsize=13, fontweight='bold', pad=15)
+    # Then place badge below the line
+    #ax1.text(0.5, 0.02, "Coverage: 100% | Bias: ✓ | Temporal: ✓", transform=ax1.transAxes, fontsize=7.5,verticalalignment='bottom', horizontalalignment='center',bbox=props)
+
+    # === RIGHT PANEL: Compact TreeSHAP Baseline ===
+    ax2.set_title("TreeSHAP: Post-Hoc Attribution", fontsize=11, fontweight='bold', pad=8)
     
     if shap_values is not None:
-        if isinstance(shap_values, list):
-            shap_vals = np.abs(shap_values[0]).mean(axis=0)
-        else:
-            shap_vals = np.abs(shap_values).mean(axis=0)
-            
+        shap_vals = np.abs(shap_values[0]).mean(axis=0) if isinstance(shap_values, list) else np.abs(shap_values).mean(axis=0)
         shap_vals = np.array(shap_vals).flatten()
         feature_names_list = list(feature_names)
         
         min_len = min(len(shap_vals), len(feature_names_list))
-        shap_vals = shap_vals[:min_len]
-        feature_names_list = feature_names_list[:min_len]
+        shap_vals, feature_names_list = shap_vals[:min_len], feature_names_list[:min_len]
         
-        top_k = min(10, min_len)
+        top_k = min(8, min_len)  # Reduced to 8 for compactness
         indices = np.argsort(shap_vals)[-top_k:][::-1].tolist()
+        colors = ['#2E86AB' if feature_names_list[int(i)] != 'gender' else '#D62728' for i in indices]
         
-        colors = ['#2E86AB' if feature_names_list[int(i)] != 'gender' else '#D62728' 
-                 for i in indices]
-        
-        ax2.barh(range(top_k), shap_vals[indices][::-1], 
-                color=colors, edgecolor='white', linewidth=1.5)
-        
+        ax2.barh(range(top_k), shap_vals[indices][::-1], color=colors, edgecolor='white', linewidth=1.2)
         ax2.set_yticks(range(top_k))
-        ax2.set_yticklabels([feature_names_list[int(i)] for i in indices][::-1], fontsize=9)
-        ax2.set_xlabel('|SHAP Value| (Magnitude)', fontsize=10)
+        ax2.set_yticklabels([feature_names_list[int(i)] for i in indices][::-1], fontsize=8)
+        ax2.set_xlabel('|SHAP Value|', fontsize=9)
         ax2.invert_yaxis()
+        ax2.tick_params(axis='both', labelsize=8)
         
-        # Limitation annotation
-        ax2.text(0.5, -1.3, "❌ LIMITATION:", 
-                transform=ax2.transAxes, fontsize=10, fontweight='bold', 
-                color='#D62728', ha='center')
-        ax2.text(0.5, -1.7, "Shows gender is important,", 
-                transform=ax2.transAxes, fontsize=9, style='italic', 
-                ha='center', color='#555')
-        ax2.text(0.5, -2.1, "but CANNOT reveal:", 
-                transform=ax2.transAxes, fontsize=9, style='italic', 
-                ha='center', color='#555')
-        ax2.text(0.5, -2.5, "• Which node triggered bias", 
-                transform=ax2.transAxes, fontsize=8.5, style='italic', 
-                ha='center', color='#777')
-        ax2.text(0.5, -2.9, "• Actual decision sequence", 
-                transform=ax2.transAxes, fontsize=8.5, style='italic', 
-                ha='center', color='#777')
+        # Integrated limitation box (inside plot area, no forced whitespace)
+        limit_text = ("Structural Limitation:\n"
+                      "Shows feature importance.")
+        ax2.text(0.30, 0.80, limit_text, transform=ax2.transAxes, fontsize=8, verticalalignment='bottom', fontweight='normal', color='#555',bbox=dict(boxstyle='round,pad=0.4', facecolor='#FFF5F5', edgecolor='#D62728', alpha=0.9, linewidth=1))
     
-    # Structural limitation note
-    ax2.text(0.02, 0.02, 
-            "Structural Limitation:\nTreeSHAP computes marginal\ncontributions (what-if),\nnot actual execution paths.", 
-            transform=ax2.transAxes, fontsize=8.5, verticalalignment='bottom',
-            bbox=dict(boxstyle='round,pad=0.5', facecolor='#FFF2F2', 
-                     edgecolor='#D62728', alpha=0.8, linewidth=1))
-    
-    plt.tight_layout()
+    plt.tight_layout(pad=2.0, h_pad=1.5, w_pad=2.0)
     plt.savefig(save_path, dpi=300, bbox_inches='tight', format='pdf')
-    print(f"✓ Saved qualitative comparison to {save_path}")
-    plt.show()
+    print(f"✓ Saved compact qualitative comparison to {save_path}")
+    #plt.show()
 
 
 def preprocess_data(df, target_col='class'):
