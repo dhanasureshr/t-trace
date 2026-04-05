@@ -451,7 +451,7 @@ def run_experiment():
         target_tree=target_tree,
         bias_node=target_node,
         shap_values=shap_values if bias_found else None,
-        save_path="t_trace/experiments/phase2/exp3/results/fig3_qualitative_comparison.pdf"
+        save_path="t_trace/experiments/phase2/exp3/results/figures/fig3_qualitative_comparison.pdf"
     )
     print("\n✅ Experiment 3 Complete.")
 
