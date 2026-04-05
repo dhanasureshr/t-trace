@@ -145,6 +145,17 @@ def visualize_bias_path_comparison(
         ax2.text(0.30, 0.80, limit_text, transform=ax2.transAxes, fontsize=8, verticalalignment='bottom', fontweight='normal', color='#555',bbox=dict(boxstyle='round,pad=0.4', facecolor='#FFF5F5', edgecolor='#D62728', alpha=0.9, linewidth=1))
     
     plt.tight_layout(pad=2.0, h_pad=1.5, w_pad=2.0)
+    
+    
+    # === COMBINED FIGURE BORDER ===
+    outer_border = mpatches.FancyBboxPatch(
+        (0.02, 0.02), 0.96, 0.96,
+        boxstyle="round,pad=0.02",
+        edgecolor="#111111", facecolor="none", linewidth=1.5,
+        transform=fig.transFigure, zorder=100
+    )
+    fig.add_artist(outer_border)
+    # ==============================
     plt.savefig(save_path, dpi=300, bbox_inches='tight', format='pdf')
     print(f"✓ Saved compact qualitative comparison to {save_path}")
     #plt.show()
