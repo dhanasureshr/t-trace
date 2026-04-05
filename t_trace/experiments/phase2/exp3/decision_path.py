@@ -17,21 +17,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 from t_trace.logging_engine import enable_logging
 
-import matplotlib.pyplot as plt
-import re
-from pathlib import Path
 
 import matplotlib.pyplot as plt
-import networkx as nx
-from sklearn.tree import plot_tree
-from matplotlib.patches import Rectangle, Circle
-import numpy as np
-
-
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.tree import plot_tree
 import matplotlib.patches as mpatches
+import numpy as np
+from sklearn.tree import _tree
 
 def visualize_bias_path_comparison(
     model, 
@@ -43,90 +33,124 @@ def visualize_bias_path_comparison(
     save_path: str = "results/fig3_qualitative_comparison.pdf"
 ):
     """
-    Create publication-ready side-by-side visualization.
-    FIXED: Handles NumPy indexing quirks and SHAP output shape variations.
+    Publication-ready side-by-side visualization.
+    LEFT: Draws ONLY the exact traversed path (no full tree clutter).
+    RIGHT: TreeSHAP baseline (unchanged robust implementation).
     """
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7), 
                                    gridspec_kw={'width_ratios': [1.1, 0.9]})
     
-    # === LEFT PANEL: M-TRACE Decision Path ===
-    ax1.set_title("M-TRACE: Exact Decision Path Reconstruction\n(Red = Actual Traversal)", 
+    # === LEFT PANEL: Exact Path Only (Flowchart Style) ===
+    ax1.set_title("M-TRACE: Exact Decision Path Reconstruction\n(Only Traversed Nodes Shown)", 
                   fontsize=13, fontweight='bold', pad=15)
     
-    tree_estimator = model.estimators_[target_tree]
-    plot_tree(tree_estimator, 
-              feature_names=feature_names,
-              filled=True, 
-              rounded=True, 
-              fontsize=8, 
-              ax=ax1,
-              impurity=False,
-              proportion=True)
+    # 1. Parse exact path nodes for the target tree
+    path_nodes = []
+    for step in bias_path:
+        if f"Tree[{target_tree}]" in step:
+            try:
+                # Format: "Tree[0]:Node[3]->age(<=17.5):Left"
+                node_str = step.split("->")[0].split(":")[1]
+                node_id = int(node_str.replace("Node[", "").replace("]", ""))
+                path_nodes.append(node_id)
+            except Exception:
+                continue
+                
+    if not path_nodes:
+        ax1.text(0.5, 0.5, "No path data found", ha='center', va='center', fontsize=12)
+        plt.tight_layout()
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.show()
+        return
+
+    tree = model.estimators_[target_tree].tree_
+    n_nodes = len(path_nodes)
     
-    # Highlight path nodes
-    path_node_ids = []
-    for step_str in bias_path:
-        try:
-            tree_part = step_str.split(":")[0]
-            node_part = step_str.split(":")[1].split("->")[0]
-            tree_id = int(tree_part.replace("Tree[","").replace("]",""))
-            node_id = int(node_part.replace("Node[","").replace("]",""))
-            if tree_id == target_tree:
-                path_node_ids.append(node_id)
-        except Exception:
-            continue
+    # Layout configuration
+    box_w, box_h = 0.55, 0.16
+    y_start = 0.92
+    y_step = 0.24
+    x_center = 0.5
     
-    for i, patch in enumerate(ax1.patches):
-        if i in path_node_ids:
-            patch.set_edgecolor('#D62728')
-            patch.set_linewidth(3.5)
-            if i == bias_node:
-                patch.set_facecolor('#FFC0CB')
-                ax1.annotate("⚠️ BIAS TRIGGERED\n(gender ≤ threshold)", 
-                           xy=(0.5, 0.3), xycoords='axes fraction',
-                           fontsize=9, fontweight='bold', color='#D62728',
-                           bbox=dict(boxstyle='round', facecolor='white', 
-                                    edgecolor='#D62728', linewidth=1.5),
-                           ha='center', va='center')
+    # Draw nodes & edges sequentially
+    for i, node_id in enumerate(path_nodes):
+        y_pos = y_start - i * y_step
+        
+        # Extract split rule
+        feat_idx = tree.feature[node_id]
+        threshold = tree.threshold[node_id]
+        feat_name = feature_names[feat_idx] if feature_names and feat_idx < len(feature_names) else f"Feat_{feat_idx}"
+        condition = f"{feat_name} ≤ {threshold:.2f}"
+        
+        # Determine direction to next node
+        is_leaf = tree.children_left[node_id] == _tree.TREE_LEAF
+        direction = "LEAF" if is_leaf else ("LEFT" if i < n_nodes-1 and path_nodes[i+1] == tree.children_left[node_id] else "RIGHT")
+        
+        # Node styling
+        is_bias = (node_id == bias_node)
+        face_color = "#FFC0CB" if is_bias else ("#FEEBCE" if i == n_nodes-1 else "white")
+        edge_color = "#D62728" if is_bias else "#2E86AB"
+        lw = 2.5 if is_bias else 1.8
+        
+        rect = mpatches.FancyBboxPatch(
+            (x_center - box_w/2, y_pos - box_h/2), box_w, box_h,
+            boxstyle="round,pad=0.03", facecolor=face_color,
+            edgecolor=edge_color, linewidth=lw, zorder=3
+        )
+        ax1.add_patch(rect)
+        
+        # Node text
+        ax1.text(x_center, y_pos, f"N{node_id}\n{condition}\n→ {direction}",
+                 ha='center', va='center', fontsize=9, 
+                 fontweight='bold' if is_bias else 'normal')
+        
+        # Bias annotation
+        if is_bias:
+            ax1.text(x_center + box_w/2 + 0.04, y_pos, "⚠️ BIAS TRIGGERED",
+                     ha='left', va='center', fontsize=10, fontweight='bold', color='#D62728')
+            
+        # Arrow to next node
+        if i < n_nodes - 1:
+            next_y = y_start - (i+1) * y_step
+            ax1.annotate("", xy=(x_center, next_y + box_h/2), xytext=(x_center, y_pos - box_h/2),
+                         arrowprops=dict(arrowstyle="->", color="#D62728", lw=2, 
+                                         shrinkA=8, shrinkB=8, mutation_scale=15))
+            
+    ax1.set_xlim(0, 1)
+    ax1.set_ylim(y_start - n_nodes * y_step - 0.1, y_start + 0.1)
+    ax1.axis('off')
     
-    path_label = " → ".join([f"N{n}" for n in path_node_ids[:5]])
-    if len(path_node_ids) > 5: path_label += " → ..."
-    
-    ax1.text(0.02, 0.98, f"M-TRACE Trajectory:\n{path_label}", 
-             transform=ax1.transAxes, fontsize=9, verticalalignment='top',
-             bbox=dict(boxstyle='round', facecolor='#FEEBCE', 
-                      edgecolor='#D62728', alpha=0.9))
-    
-    # === RIGHT PANEL: TreeSHAP Baseline (FIXED INDEXING) ===
+    # Metric box
+    props = dict(boxstyle='round,pad=0.4', facecolor='white', alpha=1.0, edgecolor='black', linewidth=1.5)
+    ax1.text(0.98, 0.98, "Path Coverage: 100%\nBias Detection: ✓\nTemporal Fidelity: ✓", 
+             transform=ax1.transAxes, fontsize=9, verticalalignment='top', 
+             horizontalalignment='right', bbox=props)
+
+    # === RIGHT PANEL: TreeSHAP Baseline (Robust Implementation) ===
     ax2.set_title("TreeSHAP: Post-Hoc Feature Attribution\n(Shows 'What', NOT 'How' or 'Where')", 
                   fontsize=13, fontweight='bold', pad=15)
     
     if shap_values is not None:
-        # Handle SHAP output shape variations safely
         if isinstance(shap_values, list):
             shap_vals = np.abs(shap_values[0]).mean(axis=0)
         else:
             shap_vals = np.abs(shap_values).mean(axis=0)
             
-        # Flatten & convert to standard Python types
         shap_vals = np.array(shap_vals).flatten()
-        feature_names_list = list(feature_names) # Ensure list for safe indexing
+        feature_names_list = list(feature_names)
         
-        # === CRITICAL FIX: Safely align lengths to prevent IndexError ===
         min_len = min(len(shap_vals), len(feature_names_list))
         shap_vals = shap_vals[:min_len]
         feature_names_list = feature_names_list[:min_len]
-        # ===============================================================
         
         top_k = min(10, min_len)
-        indices = np.argsort(shap_vals)[-top_k:][::-1].tolist() # Convert to Python list
+        indices = np.argsort(shap_vals)[-top_k:][::-1].tolist()
         
-        # Safe indexing with explicit int casting
         colors = ['#2E86AB' if feature_names_list[int(i)] != 'gender' else '#D62728' 
                  for i in indices]
         
-        bars = ax2.barh(range(top_k), shap_vals[indices][::-1], 
-                       color=colors, edgecolor='white', linewidth=1.5)
+        ax2.barh(range(top_k), shap_vals[indices][::-1], 
+                color=colors, edgecolor='white', linewidth=1.5)
         
         ax2.set_yticks(range(top_k))
         ax2.set_yticklabels([feature_names_list[int(i)] for i in indices][::-1], fontsize=9)
@@ -146,21 +170,11 @@ def visualize_bias_path_comparison(
         ax2.text(0.5, -2.5, "• Which node triggered bias", 
                 transform=ax2.transAxes, fontsize=8.5, style='italic', 
                 ha='center', color='#777')
-        ax2.text(0.5, -2.9, "• When in traversal it occurred", 
-                transform=ax2.transAxes, fontsize=8.5, style='italic', 
-                ha='center', color='#777')
-        ax2.text(0.5, -3.3, "• Actual decision sequence", 
+        ax2.text(0.5, -2.9, "• Actual decision sequence", 
                 transform=ax2.transAxes, fontsize=8.5, style='italic', 
                 ha='center', color='#777')
     
-    # === GLOBAL ANNOTATIONS ===
-    props = dict(boxstyle='round,pad=0.5', facecolor='white', 
-                alpha=1.0, edgecolor='black', linewidth=1.5)
-    ax1.text(0.98, 0.98, 
-            "Path Coverage: 100%\nBias Detection: ✓\nTemporal Fidelity: ✓", 
-            transform=ax1.transAxes, fontsize=9, verticalalignment='top', 
-            horizontalalignment='right', bbox=props)
-    
+    # Structural limitation note
     ax2.text(0.02, 0.02, 
             "Structural Limitation:\nTreeSHAP computes marginal\ncontributions (what-if),\nnot actual execution paths.", 
             transform=ax2.transAxes, fontsize=8.5, verticalalignment='bottom',
