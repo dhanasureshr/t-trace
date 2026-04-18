@@ -1,5 +1,3 @@
-# M-TRACE: Model Transparency through Recursive Analysis of Contextual Encapsulation
-
 ## 🚀 Reproducibility Instructions
 All experiments are containerized. No local Python environment setup is required.
 **Estimated Total Runtime:** ~2-3 hours (GPU)
