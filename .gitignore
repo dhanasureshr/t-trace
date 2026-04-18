@@ -169,3 +169,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+t_trace/experiments/**/results/
+!t_trace/experiments/**/results/.gitkeep
+
+*.pth
+*.pth
