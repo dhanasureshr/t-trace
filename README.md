@@ -2,8 +2,7 @@
 
 ## 🚀 Reproducibility Instructions
 All experiments are containerized. No local Python environment setup is required.
-**Estimated Total Runtime:** ~2-3 hours (GPU), ~6-8 hours (CPU)
-
+**Estimated Total Runtime:** ~2-3 hours (GPU)
 
 
 ### Prerequisites
