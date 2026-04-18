@@ -176,3 +176,4 @@ t_trace/experiments/**/results/
 
 *.pth
 *.pth
+.venv/
