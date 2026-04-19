@@ -1,0 +1,30 @@
+{
+  "seed": 789,
+  "metrics": {
+    "bert": {
+      "csvr": 0.5,
+      "csvr_std": 0.5012547071170855,
+      "mdg": 0.5,
+      "mdg_std": 0.5012547071170855,
+      "sensitivity": 0.48,
+      "sensitivity_std": 0.5008535428214359,
+      "overhead_ms": 110.98836060497888,
+      "overhead_std": 45.49486167688244
+    },
+    "roberta": {
+      "csvr": 0.485,
+      "csvr_std": 0.5010290917239925,
+      "mdg": 0.485,
+      "mdg_std": 0.5010290917239925,
+      "sensitivity": 0.51,
+      "sensitivity_std": 0.5011544461485624,
+      "overhead_ms": 113.07817858005365,
+      "overhead_std": 43.17042361624068
+    }
+  },
+  "successful_models": [
+    "bert",
+    "roberta"
+  ],
+  "failed_models": []
+}

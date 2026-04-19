@@ -1,0 +1,36 @@
+{
+  "seed": 42,
+  "experiment_id": "exp3_static_14b5ad54",
+  "timestamp": 1776496482.936855,
+  "task_type": "Static Aggregation (Breast Cancer)",
+  "model_type": "mlp",
+  "metrics": {
+    "mtrace": {
+      "train_time_sec": 0.0184,
+      "inference_latency_ms": 0.28,
+      "disk_write_time_ms": 4.81,
+      "parse_load_time_ms": 6.96,
+      "total_cost_ms": 12.06,
+      "peak_memory_kb": 600.62,
+      "found_root_cause": false,
+      "information_gain": 0.0,
+      "logs_captured_count": 2
+    },
+    "shap": {
+      "total_analysis_time_ms": 3441.83,
+      "peak_memory_kb": 101209.17,
+      "found_root_cause": true,
+      "information_gain": 1.0,
+      "samples_explained": 5
+    },
+    "comparative": {
+      "utility_diff": -1.0,
+      "cost_ratio": 0.0035034167484006,
+      "utilities_similar": false,
+      "mtrace_more_efficient": true,
+      "conclusion": "UTILITY DIFFERENCE DETECTED (Investigate model compatibility)"
+    }
+  },
+  "hypothesis": "For static aggregation tasks, M-TRACE temporal data should be redundant (similar utility, lower cost)",
+  "validation_status": "NEEDS_INVESTIGATION"
+}

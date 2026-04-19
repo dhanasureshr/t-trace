@@ -1,0 +1,26 @@
+{
+  "seed": 1011,
+  "metrics": {
+    "bert": {
+      "taf": 0.9225,
+      "taf_std": 0.1130398603743158,
+      "atc": 0.0,
+      "atc_std": 0.0,
+      "overhead_ms": 112.4963633367103,
+      "overhead_std": 45.90752140299965
+    },
+    "roberta": {
+      "taf": 0.9660000000000001,
+      "taf_std": 0.18005201775317592,
+      "atc": 0.0,
+      "atc_std": 0.0,
+      "overhead_ms": 115.78277279665599,
+      "overhead_std": 45.65285365183133
+    }
+  },
+  "successful_models": [
+    "bert",
+    "roberta"
+  ],
+  "failed_models": []
+}
